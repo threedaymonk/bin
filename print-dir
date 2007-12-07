@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+
+LINE_LENGTH = 78
+SEPARATOR = '*' * LINE_LENGTH
+Dir.chdir(ARGV.first) if ARGV.first
+
+Dir['**/*'].each do |path|
+  next unless File.file?(path)
+  next if File.basename(path) =~ /^\./
+  puts(SEPARATOR, path, SEPARATOR, '')
+  puts(File.read(path))
+  puts
+end
+  

@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+require 'rexml/document'
+
+revision, = ARGV
+
+begin
+  raise "no revision specified" unless revision
+  revision = revision.to_i
+
+  svn_info = REXML::Document.new(`svn info --xml`)
+  url = svn_info.elements['/info/entry/url'].text
+  
+  system %{ svn merge -r #{revision}:#{revision-1} "#{url}" }
+  
+rescue => e
+  $stderr.puts("Error: #{e.message}")
+  exit(1)
+end

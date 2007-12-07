@@ -1,0 +1,115 @@
+#!/usr/bin/env ruby
+
+# Ruby beautifier, version 1.3, 04/03/2006
+# Copyright (c) 2006, P. Lutus
+# Released under the GPL
+# Slightly modified by Paul Battley
+
+TAB_SIZE = 2
+TAB_STRING = " "
+
+# indent regexp tests
+
+INDENT_EXP = [
+  /(=\s*|^)(?:if|until|for|unless|while|begin|case)\b/,
+  /^(?:module|class|rescue|def|else|elsif|ensure)\b/,
+  /\b(?:then|do|when|private|public|protected)\b/,
+  /\([^\)]*$/,
+  /\{[^\}]*$/,
+  /\[[^\]]*$/
+]
+
+# outdent regexp tests
+
+OUTDENT_EXP = [
+  /^(?:rescue|ensure|else|elsif|end)\b/,
+  /\b(?:when|private|public|protected)\b/,
+  /^[^\(]*\)/,
+  /^[^\{]*\}/,
+  /^[^\[]*\]/
+]
+
+def make_tab(tab)
+  return (tab < 0) ? "" : TAB_STRING * TAB_SIZE * tab
+end
+
+def add_line(line, tab)
+  line.strip!
+  line = make_tab(tab) + line if line.length > 0
+  return line + "\n"
+end
+
+def beautify_ruby
+  comment_block = false
+  multiline_array = Array.new
+  multiline_string = ""
+  tab = 0
+  source = $stdin.read
+  dest = ""
+  source.split("\n").each do |line|
+    # combine continuing lines
+    if(!(line =~ /^\s*#/) && line =~ /[^\\]\\\s*$/)
+      multiline_array.push line
+      multiline_string += line.sub(/^(.*)\\\s*$/,"\\1")
+      next
+    end
+
+    # add final line
+    if(multiline_string.length > 0)
+      multiline_array.push line
+      multiline_string << line.sub(/^(.*)\\\s*$/,"\\1")
+    end
+
+    tline = ((multiline_string.length > 0) ? multiline_string : line).strip
+    if(tline =~ /^=begin/)
+      comment_block = true
+    end
+    if(comment_block)
+      # add the line unchanged
+      dest += line + "\n"
+    else
+      comment_line = (tline =~ /^#/)
+      if(!comment_line)
+        # throw out sequences that will
+        # only sow confusion
+        tline.gsub!(/\/.*?\//,"")
+        tline.gsub!(/%r\{.*?\}/,"")
+        tline.gsub!(/%r(.).*?\1/,"")
+        tline.gsub!(/\\\"/,"'")
+        tline.gsub!(/".*?"/,"\"\"")
+        tline.gsub!(/'.*?'/,"''")
+        tline.gsub!(/#\{.*?\}/,"")
+        OUTDENT_EXP.each do |re|
+          if(tline =~ re)
+            tab -= 1
+            break
+          end
+        end
+      end
+      if (multiline_array.length > 0)
+        multiline_array.each do |ml|
+          dest += add_line(ml,tab)
+        end
+        multiline_array.clear
+        multiline_string = ""
+      else
+        dest += add_line(line,tab)
+      end
+      if(!comment_line)
+        INDENT_EXP.each do |re|
+          if(tline =~ re && !(tline =~ /\s+end\s*$/))
+            tab += 1
+            break
+          end
+        end
+      end
+    end
+    if(tline =~ /^=end/)
+      comment_block = false
+    end
+  end
+  dest.gsub!(/\n{3,}/, "\n\n")
+  $stdout << dest
+end
+
+beautify_ruby

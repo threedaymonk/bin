@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+require 'net/http'
+require 'uri'
+
+ARGV.each do |arg|
+  puts arg
+  uri = URI.parse(arg)
+
+  response = nil
+  Net::HTTP.start(uri.host, uri.port) do |http|
+    response = http.head(uri.path)
+  end
+  response.each_header do |key, value|
+    puts "#{key}: #{value}"
+  end
+  puts
+end

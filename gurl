@@ -1,0 +1,108 @@
+#!/usr/bin/env ruby
+
+require 'open-uri'
+require 'fileutils'
+$stdout.sync = true
+
+class Gurl
+  RETRIES = 3
+  USER_AGENT = "GURL 0.2"
+
+  def fetch(uri)
+    ref = uri.split('/')[0,3].join('/') << '/'
+    dir = uri.gsub(%r!^https?://[^/]+/|[^/]+$!, '')
+    dir = '.' if dir.empty?
+    file = uri.split('/').last
+    FileUtils.mkdir_p(dir)
+    Dir.chdir(dir) do
+      fail_count = 0
+      begin
+        print("#{uri}...")
+        if (File.exist?(file))
+          puts(' Already exists.')
+        else
+          open(uri,
+            'User-Agent' => USER_AGENT,
+            'Referer' => ref
+          ) do |src|
+            data = src.read
+            begin
+              if (file =~ /\.jpe?g$/ && data[0,2] != "\xff\xd8")
+                raise 'not a JPEG file'
+              end
+              File.open(file, "wb") do |dest|
+                dest.write(data)
+                puts (' OK.')
+              end
+            rescue => e
+              puts ' '+e.message+'.'
+            end
+          end
+        end
+      rescue
+        if (fail_count <= RETRIES)
+          puts(' Retry...')
+          fail_count += 1
+        else
+          puts(' Failed.')
+        end
+      end
+    end
+  end
+
+  def iterate(str, sets)
+    if (sets.length > 0)
+      k0 = sets.keys.sort.first
+      sets[k0].each do |v|
+        str1 = str.gsub("\\#{k0+1}", v)
+        sets1 = sets.dup
+        sets1.delete(k0)
+        iterate(str1, sets1)
+      end
+    else
+      fetch(str)
+    end
+  end
+
+  def initialize(location, options={})
+    @location, @options = location, options
+  end
+
+  def process!
+    loc = @location.dup
+    if @options[:interpolate]
+      idx = 0
+      sets = {}
+      loc.gsub!(/\[[a-z0-9]+-[a-z0-9]+\]|\{.*?\}/i) do |m|
+        if (m =~ /^\[/)
+          v0, v1 = m[1..-2].split('-')
+          sets[idx] = v0..v1
+        else
+          sets[idx] = m[1..-2].split(',')
+        end
+        idx += 1
+        # \1 through \9 refer to array elements 0 through 8, so this comes
+        # after the increment
+        "\\#{idx}"
+      end
+      iterate(loc, sets)
+    else
+      fetch(loc)
+    end
+  end
+end
+
+begin
+  if (ARGV.empty?)
+    $stdin.each_line { |ln| Gurl.new(ln.strip) }
+  else
+    options = {
+      :interpolate => !ARGV.delete('-n')
+    }
+    ARGV.each do |arg|
+      Gurl.new(arg, options).process!
+    end
+  end
+rescue Interrupt
+  exit
+end

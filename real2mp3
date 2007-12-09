@@ -1,0 +1,122 @@
+#!/usr/bin/env ruby
+require 'tempfile'
+require 'open-uri'
+require 'uri'
+require 'digest/sha1'
+require 'fileutils'
+
+class Real2MP3
+  
+  TRANSPORTS = %w[ pnm rtsp ] # In order of preference
+  UNSAFE_BYTES = /[\x00-\x1f<>:"\/\\\|\*\?\$]+/n
+  
+  def initialize(src)
+    @src = src
+  end
+  
+  def convert!
+    case @src
+    when %r!^http://.*/aod/!
+      convert_bbc_aod(@src)
+    when %r!^https?://|\.ram$!i
+      convert_ram_file(@src)
+    when %r!^[a-z]+:!i
+      convert_stream(@src)
+    else
+      convert_ra_file(@src)
+    end
+  end
+
+  def convert_bbc_aod(url)
+    inform("Looking for BBC player in #{url}")
+    frameset = open(url){ |io| io.read }
+    frame_url = absolute_uri(url, frameset[%r!<frame name="bbcplayer"[^>]+?src="(.*?)"!, 1])
+    inform("Looking for ram file in #{frame_url}")
+    html = open(frame_url){ |io| io.read }
+    ram = absolute_uri(frame_url, html[%r!href="(.*?\.ram)"!, 1])
+    raise "Couldn't find ram file!" unless ram
+    convert_ram_file(ram)
+  end
+  
+  def convert_ram_file(file_or_url)
+    inform("Searching for available streams in #{file_or_url}")
+    streamlist = open(file_or_url).read
+    streams = TRANSPORTS.inject([]){ |streams, transport|
+      streams += streamlist.grep(%r!^#{transport}:!)
+    }.map{ |s| s.strip }
+    raise "No streams found!" if streams.empty?
+    inform("Found #{streams.length} stream(s)")
+    streams.each do |stream|
+      convert_stream(stream) rescue (inform($!) ; next)
+      return
+    end
+    raise "No working streams found."
+  end
+
+  def convert_stream(url)
+    inform("Dumping stream #{url}")
+    with_tempfile do |tempfile|
+      system %{ mplayer "#{ url }" -dumpstream -dumpfile "#{ tempfile }" }
+      raise "Stream failed" unless File.stat(tempfile).size > 0
+      convert_ra_file(tempfile, url)
+    end
+  end
+
+  def convert_ra_file(src, url=nil)
+    inform "Converting #{src}"
+    author, title = ra_info(src)
+
+    if author || title
+      dest = make_safe([author, title].compact.join(" - ")) << '.mp3'
+    else
+      dest = make_safe(File.basename(url || src, '.*')) << '.mp3'
+    end
+    
+    while File.exist?(dest)
+      dest.gsub!(/(\.(\d+))?\.mp3$/){ i = $2 ? $2.to_i + 1 : 1 ; ".#{i}.mp3" }
+    end
+
+    with_tempfile do |tempfile|
+      system %{ mplayer "#{ src }" -ao pcm:file="#{ tempfile }" -vc dummy -vo null }
+      system %{ lame "#{ tempfile }" "#{ dest }" --tt "#{ title }" --ta "#{ author }" }
+    end
+  end
+  
+  def make_safe(filename)
+    return filename.gsub(UNSAFE_BYTES, '_')
+  end
+  
+  def with_tempfile
+    path = File.basename($0) + '-' + Digest::SHA1.hexdigest(Time.now.to_s + rand.to_s)
+    yield path
+    FileUtils.rm path
+  end
+  
+  def ra_info(src)
+    info = `mplayer "#{ src }" -vo null -ao null -ss 10:00:00`
+    author = info[/author:\s*(.*)/i, 1]
+    title = info[/name:\s*(.*)/i, 1]
+    return author, title
+  end
+  
+  def inform(str)
+    puts("---- #{str} ----")
+  end
+  
+  def absolute_uri(from, to)
+    return URI.parse(from).merge(to).to_s
+  end
+  
+end
+
+if ARGV.empty?
+  puts("Usage: #{File.basename($0)} path_or_url_to_real_audio [another_path [...]]")
+end
+
+ARGV.each do |src|
+  begin
+    Real2MP3.new(src).convert!
+  rescue Exception => e
+    $stderr.puts(e.to_s)
+  end
+end

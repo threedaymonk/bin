@@ -3,34 +3,72 @@ require 'fileutils'
 include FileUtils
 
 input = ARGV.shift
-edl = input.sub(/\.mpg$/i, '.edl')
+passes = 2
+width = 640
+
+def force(size, quantization)
+  (size.to_f / quantization).round * quantization
+end
+
+edl = input.sub(/\.[^\.]+$/i, '.edl')
+output = input.sub(/\.[^\.]+$/i, '.avi')
+raise 'Input file and output file are the same' if input == output
 edl = File.exist?(edl) && edl
-extra_args = ARGV
+extra_args = []
+vf_args = %w[pp=de scale]
+vops = %w[lavcdeint]
+avc_options = %w[vcodec=mpeg4 vhq v4mv vqmin=2 vbitrate=920]
+until ARGV.empty?
+  case (arg = ARGV.shift)
+  when '--passes'
+    passes = ARGV.shift.to_i
+  when '--vop'
+    vops.unshift ARGV.shift
+  when '--option'
+    avc_options << ARGV.shift
+  when '--crop'
+    w,h,x,y, = ARGV.shift.split(':')
+    vf_args << "crop=#{w}:#{h}:#{x}:#{y}"
+  when '--width'
+    width = force(ARGV.shift.to_i, 8)
+  when '--ratio'
+    w,h, = ARGV.shift.split(':')
+    ratio = w.to_f / h.to_f
+    height = force(width / ratio, 8)
+    vf_args << "scale=#{width}:#{height}"
+    extra_args << "-xy #{width}:#{height}"
+  else
+    extra_args << arg
+  end
+end
+
+puts "#{input} -> #{output}"
 
 rm_f "frameno.avi"
 
-[1, 2].each do |pass|
+(1..passes).each do |pass|
+  lavcopts = avc_options.dup 
+  avc_options <<  "vpass=#{pass}" if passes > 1
   options = %W{
     -oac mp3lame
     -lameopts abr:br=128
     -ovc lavc
-    -lavcopts vcodec=mpeg4:vhq:v4mv:vqmin=2:vbitrate=920:vpass=#{pass}
+    -lavcopts #{avc_options.join(':')}
     -ofps 25 
-    -vf pp=de,scale
-    -zoom -xy 640
-    -vop lavcdeint
+    -vf #{vf_args.join(',')}
+    -zoom -xy #{width}
+    -vop #{vops.join(',')}
   } + extra_args
   options << %{-edl "#{edl}"} if edl
   options = options.join(' ')
 
-  case pass
-  when 2
-    output = input.sub(/\.mpg$/i, '.avi')
+  if pass == passes
+    ofile = output
   else
-    output = "/dev/null"
+    ofile = "/dev/null"
   end
   
-  cmd = %{ nice -n 19 mencoder "#{input}" #{options} -o "#{output}" }
+  cmd = %{ nice -n 19 mencoder "#{input}" #{options} -o "#{ofile}" }
   puts cmd
   system cmd
 end

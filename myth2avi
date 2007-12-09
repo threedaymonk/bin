@@ -55,9 +55,8 @@ rm_f "frameno.avi"
     -ovc lavc
     -lavcopts #{avc_options.join(':')}
     -ofps 25 
-    -vf #{vf_args.join(',')}
+    -vf #{(vf_args+vops).join(',')}
     -zoom -xy #{width}
-    -vop #{vops.join(',')}
   } + extra_args
   options << %{-edl "#{edl}"} if edl
   options = options.join(' ')

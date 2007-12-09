@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+require 'fileutils'
+include FileUtils
+
+input = ARGV.shift
+edl = input.sub(/\.mpg$/i, '.edl')
+edl = File.exist?(edl) && edl
+extra_args = ARGV
+
+rm_f "frameno.avi"
+
+[1, 2].each do |pass|
+  options = %W{
+    -oac mp3lame
+    -lameopts abr:br=128
+    -ovc lavc
+    -lavcopts vcodec=mpeg4:vhq:v4mv:vqmin=2:vbitrate=920:vpass=#{pass}
+    -ofps 25 
+    -vf pp=de,scale
+    -zoom -xy 640
+    -vop lavcdeint
+  } + extra_args
+  options << %{-edl "#{edl}"} if edl
+  options = options.join(' ')
+
+  case pass
+  when 2
+    output = input.sub(/\.mpg$/i, '.avi')
+  else
+    output = "/dev/null"
+  end
+  
+  cmd = %{ nice -n 19 mencoder "#{input}" #{options} -o "#{output}" }
+  puts cmd
+  system cmd
+end
+
+rm_f "divx2pass.log"

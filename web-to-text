@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+require 'open-uri'
+require 'htmlentities'
+BLOCK_LEVEL = %w(
+  address blockquote center dir div dl fieldset form
+  h[123456] hr isindex menu noframes noscript ol p
+  pre table ul dd dt frameset li tbody td tfoot th
+  thead tr
+)
+SPACING_RE = %r{ </? (?: #{BLOCK_LEVEL.join('|')} ) \b [^>]* > }ix
+SCRIPT_RE = %r{ <script\b .*? </script> }mix
+TAG_RE = %r{ <[^>]+> }mix
+html = nil
+h = HTMLEntities.new
+
+ARGV.each do |url|
+  html = open(url){ |io| io.read }.strip
+  html.gsub!(/\s+/, ' ')
+  html.gsub!(SCRIPT_RE, "\n\n")
+  html.gsub!(SPACING_RE, "\n\n")
+  html.gsub!(TAG_RE, '')
+  html = h.decode(html)
+  html.gsub!(/  +/, ' ')
+  html.gsub!(/(?: ?\n ?){3,}/, "\n\n")
+
+  puts html
+end

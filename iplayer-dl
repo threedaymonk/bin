@@ -33,10 +33,11 @@ html = output_of( shell( 'curl', page_url,
                          '--user-agent'  => UA,
                          '--dump-header' => COOKIE_JAR ))
 
-pid = html.scan(/\bpid[ \t]+:[ \t]+'([a-z0-9]+)'/) or die "Couldn't find PID."
+pid = html[/\bpid[ \t]+:[ \t]+'([a-z0-9]+)'/, 1] or die "Couldn't find PID."
+title = html[%r!<title>([^<]+)</title>!, 1].split(/ - /).last
 
 mp4_url = "http://www.bbc.co.uk/mediaselector/3/auth/iplayer_streaming_http_mp4/#{ pid }"
-filename = "#{ ARGV[1] || pid }.mp4"
+filename = "#{ ARGV[1] || title }.mp4"
 puts "#{ mp4_url } => #{ filename }"
 
 system( shell( 'curl', mp4_url,

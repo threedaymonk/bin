@@ -23,8 +23,8 @@ page_url = ARGV[0]
 unless page_url
   puts "Download DRM-free videos from the BBC iPlayer, courtesy of their iPhone interface."
   puts
-  puts "Usage: #{$0} URL (filename)"
-  puts "Where URL is the iPlayer viewing page and filename is optional."
+  puts "Usage: #{$0} URL (name)"
+  puts "Where URL is the iPlayer viewing page and name is an optional filename (.mp4 is added automatically)."
   exit 1
 end
 

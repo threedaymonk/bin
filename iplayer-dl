@@ -1,0 +1,49 @@
+#!/usr/bin/env ruby
+
+UA = 'Mozilla/5.0 (iPhone; U; CPU like Mac OS X; en) AppleWebKit/420+ (KHTML, like Gecko) Version/3.0 Mobile/1A543a Safari/419.3'
+COOKIE_JAR = '/tmp/fake_iphone_cookies'
+
+page_url = ARGV[0]
+
+unless page_url
+  puts "Download DRM-free videos from the BBC iPlayer, courtesy of their iPhone interface."
+  puts
+  puts "Usage: #{$0} URL (filename)"
+  puts "Where URL is the iPlayer viewing page and filename is optional."
+  exit 0
+end
+
+def shell(command, arguments, params={})
+  [ command,
+    params.inject([]){ |a, (k,v)| a << ((v == true) ? k : %{#{k} "#{v}"}) },
+    [arguments].flatten.map{ |a| %{"#{a}"} } ].flatten.join(' ')
+end
+
+def output_of(cmd)
+  `#{cmd}`
+end
+
+def die(msg)
+  $stderr.puts msg
+  exit 1
+end
+
+html = output_of( shell( 'curl', page_url, 
+                         '--silent'      => true, 
+                         '--user-agent'  => UA,
+                         '--dump-header' => COOKIE_JAR ))
+
+pid = html.scan(/\bpid[ \t]+:[ \t]+'([a-z0-9]+)'/) or die "Couldn't find PID."
+
+mp4_url = "http://www.bbc.co.uk/mediaselector/3/auth/iplayer_streaming_http_mp4/#{ pid }"
+filename = "#{ ARGV[1] || pid }.mp4"
+puts "#{ mp4_url } => #{ filename }"
+
+system( shell( 'curl', mp4_url,
+               '--output'     => filename,
+               '--user-agent' => UA,
+               '--referer'    => page_url,
+               '--max-redirs' => 10,
+               '--location'   => true,
+               '--cookie'     => COOKIE_JAR ))
+

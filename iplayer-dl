@@ -1,5 +1,8 @@
 #!/usr/bin/env ruby
 
+# Download iPlayer programmes by spoofing an iPhone
+# Paul Battley - http://po-ru.com/
+
 require 'net/http'
 require 'uri'
 

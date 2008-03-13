@@ -67,11 +67,11 @@ puts " => #{ filename }"
 
 url = URI.parse(selector)
 http = Net::HTTP.new(url.host, url.port)
-headers = {
+headers = DEFAULT_HEADERS.merge(
   'Cookie'     => cookies.join('; '),
   'User-Agent' => QT_UA,
   'Range'      => 'bytes=0-1'
-}
+)
 response, body = http.get(url.path, headers)
 location = response.to_hash['location']
 p location

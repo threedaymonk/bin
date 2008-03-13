@@ -2,8 +2,10 @@
 
 require 'net/http'
 require 'uri'
+require 'pp'
 
-IPHONE_UA  = 'Mozilla/5.0 (iPhone; U; CPU like Mac OS X; en) AppleWebKit/420+ (KHTML, like Gecko) Version/3.0 Mobile/1A543a Safari/419.3'
+#IPHONE_UA  = 'Mozilla/5.0 (iPhone; U; CPU like Mac OS X; en) AppleWebKit/420+ (KHTML, like Gecko) Version/3.0 Mobile/1A543a Safari/419.3'
+IPHONE_UA = 'Mozilla/5.0 (iPod; U; CPU like Mac OS X; en) AppleWebKit/420.1 (KHTML, like Gecko) Version/3.0 Mobile/4A93 Safari/419.3'
 QT_UA      = 'Apple iPhone v1.1.3 CoreMedia v1.0.0.4A93'
 DEFAULT_HEADERS = {
   'Accept'          => '*/*',
@@ -30,7 +32,17 @@ class Net::HTTPResponse # Monkey-patch in some 21st-century functionality
   end
 end
 
-page_url = ARGV[0]
+def http_get(location, headers={})
+  url = URI.parse(location)
+  http = Net::HTTP.new(url.host, url.port)
+  path = url.path
+  if url.query
+    path << '?' << url.query
+  end
+  http.get(path, DEFAULT_HEADERS.merge(headers))
+end
+
+page_url, title, = ARGV
 
 unless page_url
   puts "Download DRM-free videos from the BBC iPlayer, courtesy of their iPhone interface."
@@ -40,50 +52,31 @@ unless page_url
   exit 1
 end
 
-url = URI.parse(ARGV[0])
-http = Net::HTTP.new(url.host, url.port)
 headers = {
-  'User-Agent' => IPHONE_UA
 }
-response, html = http.get(url.path, headers)
-cookies = response.cookies
-p cookies
+response, html = http_get( page_url,
+                           'User-Agent' => IPHONE_UA )
+cookies = response.cookies.join('; ')
 
-pid = html[/\bpid[ \t]+:[ \t]+'([a-z0-9]+)'/, 1] or die "Couldn't find PID."
-title = html[%r!<title>([^<]+)</title>!, 1].split(/ - /).last
+pid = html[/\bpid[ \t]+:[ \t]+'([a-z0-9]+)'/, 1]
+title ||= html[%r!<title>([^<]+)</title>!, 1].split(/ - /).last
 
+filename = "#{ title }.mp4"
 r = (rand * 10000000).floor
-r = 467833
-
-headers = DEFAULT_HEADERS.merge(
-  'Cookie'     => cookies.join('; '),
-  'User-Agent' => QT_UA,
-  'Range'      => 'bytes=0-1'
-)
-
-filename = "#{ ARGV[1] || title }.mp4"
 selector = "http://www.bbc.co.uk/mediaselector/3/auth/iplayer_streaming_http_mp4/#{ pid }?#{r}"
-puts " => #{ filename }"
 
-url = URI.parse(selector)
-http = Net::HTTP.new(url.host, url.port)
-headers = DEFAULT_HEADERS.merge(
-  'Cookie'     => cookies.join('; '),
-  'User-Agent' => QT_UA,
-  'Range'      => 'bytes=0-1'
-)
-response, body = http.get(url.path, headers)
+response, body = http_get( selector, 
+                           'Cookie'     => cookies,
+                           'User-Agent' => QT_UA,
+                           'Range'      => 'bytes=0-1' )
 location = response.to_hash['location']
-p location
 
-url = URI.parse(location)
-http = Net::HTTP.new(url.host, url.port)
-headers = DEFAULT_HEADERS.merge(
-  'User-Agent'      => QT_UA,
-  'Range'           => 'bytes=0-1',
-  'Cookie'          => cookies.join('; ')
-)
-response, body = http.get(url.path, headers)
+pp response.to_hash
 
-p response.to_hash
+response, body = http_get( location,
+                           'User-Agent'      => QT_UA,
+                           'Range'           => 'bytes=0-1',
+                           'Cookie'          => cookies )
+
+pp response.to_hash
 p body

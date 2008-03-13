@@ -2,7 +2,6 @@
 
 require 'net/http'
 require 'uri'
-require 'pp'
 
 # Used by Safari Mobile
 IPHONE_UA  = 'Mozilla/5.0 (iPhone; U; CPU like Mac OS X; en) AppleWebKit/420+ '+

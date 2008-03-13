@@ -83,6 +83,8 @@ response = http_get( location,
 max = response.to_hash['content-range'][/\d+$/].to_i
 
 bytes_got = 0
+old_percentage = 0
+puts '0%'
 File.open("#{ title }.mp4", 'wb') do |io|
   http_get( location,
             'Cookie'     => cookies,
@@ -90,7 +92,11 @@ File.open("#{ title }.mp4", 'wb') do |io|
             'Range'      => "bytes=0-#{max}" ) do |response|
     response.read_body do |data|
       bytes_got += data.length
-      puts "#{bytes_got}/#{max}"
+      percentage = (100 * bytes_got) / max
+      if percentage != old_percentage
+        old_percentage = percentage
+        puts "#{percentage}%"
+      end
       io << data
     end
   end

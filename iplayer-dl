@@ -15,7 +15,8 @@ def die(msg)
   exit 1
 end
 
-UA = 'Mozilla/5.0 (iPhone; U; CPU like Mac OS X; en) AppleWebKit/420+ (KHTML, like Gecko) Version/3.0 Mobile/1A543a Safari/419.3'
+IPHONE_UA = 'Mozilla/5.0 (iPhone; U; CPU like Mac OS X; en) AppleWebKit/420+ (KHTML, like Gecko) Version/3.0 Mobile/1A543a Safari/419.3'
+QT_UA = 'Apple iPhone v1.1.3 CoreMedia v1.0.0.4A93'
 COOKIE_JAR = '/tmp/fake_iphone_cookies'
 
 page_url = ARGV[0]
@@ -30,21 +31,24 @@ end
 
 html = output_of( shell( 'curl', page_url, 
                          '--silent'      => true, 
-                         '--user-agent'  => UA,
+                         '--user-agent'  => IPHONE_UA,
                          '--dump-header' => COOKIE_JAR ))
 
 pid = html[/\bpid[ \t]+:[ \t]+'([a-z0-9]+)'/, 1] or die "Couldn't find PID."
 title = html[%r!<title>([^<]+)</title>!, 1].split(/ - /).last
 
-mp4_url = "http://www.bbc.co.uk/mediaselector/3/auth/iplayer_streaming_http_mp4/#{ pid }"
+r = (rand * 10000000).floor
+
+mp4_url = "http://www.bbc.co.uk/mediaselector/3/auth/iplayer_streaming_http_mp4/#{ pid }?#{r}"
 filename = "#{ ARGV[1] || title }.mp4"
 puts "#{ mp4_url } => #{ filename }"
 
 system( shell( 'curl', mp4_url,
                '--output'     => filename,
-               '--user-agent' => UA,
-               '--referer'    => page_url,
-               '--max-redirs' => 10,
+               '--user-agent' => QT_UA,
+               '--header'     => "Range: bytes=0-1",
                '--location'   => true,
+               '--dump-header'=> COOKIE_JAR+'2',
                '--cookie'     => COOKIE_JAR ))
 
+               

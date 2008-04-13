@@ -1,0 +1,45 @@
+#!/usr/bin/perl
+
+use LWP::UserAgent;
+use URI;
+
+$ua = LWP::UserAgent->new;
+$ua->agent("Paul's Image Lister");
+
+if (scalar(@ARGV) > 0)
+{
+  source_file: foreach $p (@ARGV)
+  {
+    process_page ($p);
+  }
+}
+else
+{
+  while ($p = <>)
+  {
+    chomp ($p);
+    process_page ($p);  
+  }
+}
+
+sub process_page
+{
+  my $src = $_[0];
+  my $request = HTTP::Request->new(GET => $src);
+  my $response = $ua->request($request);
+  if ($response->is_success)
+  {
+    my $content = $response->content;
+    while ($content =~ s/<img [^>]*src=['"]?([^'"\> ]+)//i)
+    {
+      $rel = $1;
+      return if ($rel =~ /^#/);
+      my $abs = URI->new_abs($rel, $src);
+      print ("$abs\n");
+    }
+  }
+  else
+  {
+    print STDERR ("Could not retrieve $src.\n");
+  }
+}  

@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+
+require 'open-uri'
+require 'uri'
+require 'htmlentities'
+
+ARGV.each do |uri|
+    begin
+        open(uri) do |fp|
+            html = fp.read
+            html.scan(%r!<a.*?href=['"]?(http[^"'\s>]+)!im) do
+                link = URI.join(uri, $1).to_s.decode_entities
+                puts link
+            end
+        end
+    rescue Exception => e
+        $stderr.puts("Error: #{e.to_s}")
+    end
+end
+

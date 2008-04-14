@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+require 'uri'
+url = ARGV[0]
+host = URI.parse(url).host
+Dir.mkdir(host)
+Dir.chdir(host) do
+  system "wget -nH -nd -E -p -k -e robots=off '#{url}'"
+end

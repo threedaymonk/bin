@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+SPECIAL = Regexp.new('[' + Regexp.escape("\n!\"\#\$%&'()*+,-/:;<=>?@[\\]^_`{|}~") + ']', 'n')
+$stdout.puts $stdin.read.strip.gsub(SPECIAL){
+  "&\#x%x;" % $&.unpack('C')[0]
+}

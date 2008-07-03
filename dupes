@@ -1,7 +1,11 @@
 #!/usr/bin/env ruby
 require 'digest/sha1'
-SAMPLE = 4*1024*1024
+require 'fileutils'
+
+SAMPLE = 1*1024*1024
 by_length = {}
+
+do_delete = ARGV.delete('--delete')
 
 Dir["#{ARGV[0] || '.'}/**/*"].each do |path|
   next unless File.file?(path)
@@ -21,6 +25,9 @@ by_length.each do |length, paths|
     next unless paths.length > 1
     paths.sort_by{ |f| File.mtime(f) }.each_with_index do |f, i|
       puts "#{i} #{f}"
+      if (i > 0) && do_delete
+        FileUtils.rm(f)
+      end
     end
     puts
   end

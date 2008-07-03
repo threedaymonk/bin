@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+require 'digest/sha1'
+SAMPLE = 4*1024*1024
+by_length = {}
+
+Dir["#{ARGV[0] || '.'}/**/*"].each do |path|
+  next unless File.file?(path)
+  (by_length[File.size(path)] ||= []) << path
+end
+
+sample = nil
+by_hash = nil
+by_length.each do |length, paths|
+  next unless paths.length > 1
+  by_hash = paths.inject({}){ |hash, path|
+    sample = File.read(path, SAMPLE)
+    (hash[sample] ||= []) << path
+    hash
+  }
+  by_hash.each do |hash, paths|
+    next unless paths.length > 1
+    paths.sort_by{ |f| File.mtime(f) }.each_with_index do |f, i|
+      puts "#{i} #{f}"
+    end
+    puts
+  end
+end

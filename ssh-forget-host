@@ -3,6 +3,6 @@
 KNOWN_HOSTS="$HOME/.ssh/known_hosts"
 
 for SITE in $*; do
-    grep -v "^$SITE," "$KNOWN_HOSTS" > "$KNOWN_HOSTS.1"
+    grep -v "^$SITE" "$KNOWN_HOSTS" > "$KNOWN_HOSTS.1"
     mv "$KNOWN_HOSTS.1" "$KNOWN_HOSTS"
 done

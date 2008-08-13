@@ -1,0 +1,70 @@
+#!/usr/bin/env ruby
+require 'json'
+require 'uri'
+require 'cgi'
+require 'net/http'
+require 'time'
+
+username              = nil
+password              = nil
+error_message         = '%H:%M Error connecting to server'
+message_format        = '%H:%M %N (%n) %t'
+host                  = 'twitter.com'
+path                  = '/statuses/friends_timeline.json'
+delay_between_updates = 120
+
+config_file = File.join(ENV['HOME'], '.watch-tweets.rc')
+eval(File.read(config_file), binding, config_file, 1)
+
+class TwitterMessage
+  attr_accessor :text, :real_name, :screen_name, :created_at, :message_id
+  def self.from_api(m)
+    t = new
+    t.text        = CGI.unescapeHTML(m['text']) <<
+                    (m['truncated'] ? '[...]' : '')
+    t.real_name   = m['user']['name']
+    t.screen_name = m['user']['screen_name']
+    t.created_at  = Time.parse(m['created_at'])
+    t.message_id  = m['id'].to_i
+    t
+  end
+
+  def format(pattern)
+    replacements = {'%t' => :text, '%N' => :real_name, '%n' => :screen_name}
+    pattern.gsub(/%[a-z]/i){ 
+      if r = replacements[$&]
+        __send__(r)
+      else
+        created_at.strftime($&)
+      end
+    }
+  end
+end
+
+last_id  = 0
+succeeded_last_time = true
+
+Net::HTTP.start(host) do |http|
+  loop do
+    begin
+      request = Net::HTTP::Get.new(path)
+      request.basic_auth(username, password)
+      response = http.request(request)
+      json = response.body
+      messages = JSON.parse(json).map{ |m| TwitterMessage.from_api(m) }
+      messages.sort_by{ |m| m.message_id }.each do |m|
+        if m.message_id > last_id
+          puts m.format(message_format)
+          last_id = m.message_id
+        end
+      end
+      succeeded_last_time = true
+    rescue Interrupt
+      exit
+    rescue => exception
+      puts Time.now.strftime(error_message) if succeeded_last_time
+      succeeded_last_time = false
+    end
+    sleep delay_between_updates
+  end
+end

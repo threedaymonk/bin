@@ -38,7 +38,7 @@ class TwitterMessage
       else
         created_at.strftime($&)
       end
-    }.gsub(/@[a-z0-9]+/i){ at_pattern % $& }
+    }.gsub(/@[_a-z0-9]+/i){ at_pattern % $& }
   end
 end
 

@@ -7,7 +7,7 @@ task :install do
       destination = File.basename(source)
       if File.exist?(destination)
         puts "- %s already exists" % destination
-      else
+      elsif File.executable?(destination)
         ln_s source, destination
         puts "+ %s linked" % destination
       end

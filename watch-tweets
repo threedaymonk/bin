@@ -9,6 +9,7 @@ username              = nil
 password              = nil
 error_message         = '%H:%M Error connecting to server'
 message_format        = '%H:%M %N (%n) %t'
+at_messages           = '%s'
 host                  = 'twitter.com'
 path                  = '/statuses/friends_timeline.json'
 delay_between_updates = 120
@@ -29,7 +30,7 @@ class TwitterMessage
     t
   end
 
-  def format(pattern)
+  def format(pattern, at_pattern)
     replacements = {'%t' => :text, '%N' => :real_name, '%n' => :screen_name}
     pattern.gsub(/%[a-z]/i){ 
       if r = replacements[$&]
@@ -37,7 +38,7 @@ class TwitterMessage
       else
         created_at.strftime($&)
       end
-    }
+    }.gsub(/@[a-z0-9]+/i){ at_pattern % $& }
   end
 end
 
@@ -54,7 +55,7 @@ Net::HTTP.start(host) do |http|
       messages = JSON.parse(json).map{ |m| TwitterMessage.from_api(m) }
       messages.sort_by{ |m| m.message_id }.each do |m|
         if m.message_id > last_id
-          puts m.format(message_format)
+          puts m.format(message_format, at_messages)
           last_id = m.message_id
         end
       end

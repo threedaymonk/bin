@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+require 'mechanize'
+require 'csv'
+
+email, password = nil
+config_file = File.join(ENV['HOME'], '.config', 'newnet', 'login')
+eval(File.read(config_file), binding, config_file, 1)
+
+agent = WWW::Mechanize.new
+
+# Sign in
+page = agent.get('https://orderform.co.uk/login/index.php?form=orac')
+form = page.form('login')
+form.emailaddress = email
+form.password     = password
+page = agent.submit(form, form.buttons.first)
+
+# Go to bandwidth page
+page = agent.get(page.search("//a").map{ |a| a['href'] }.find{ |h| h =~ /ADSLAccountDetails/ })
+
+# Get bandwidth CSV for current month
+form = page.form('getbwu')
+form.monthFilter = Time.now.strftime('%Y-%m')
+csv = agent.submit(form, form.buttons.first).body
+
+headers = nil
+CSV::Reader.parse(csv) do |row|
+  if headers
+    headers.zip(row).each do |k, v|
+      puts("#{k}: #{v}")
+    end
+  else
+    headers = row.to_a
+  end
+end

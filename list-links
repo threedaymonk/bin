@@ -9,7 +9,7 @@ ARGV.each do |uri|
         open(uri) do |fp|
             html = fp.read
             html.scan(%r!<a.*?href=['"]?(http[^"'\s>]+)!im) do
-                link = URI.join(uri, $1).to_s.decode_entities
+                link = HTMLEntities.new.decode(URI.join(uri, $1).to_s)
                 puts link
             end
         end

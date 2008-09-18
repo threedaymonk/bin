@@ -1,0 +1,2 @@
+#!/bin/sh
+grep -r $* app bin config lib test | grep -v \\.svn

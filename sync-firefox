@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+home = ENV['HOME']
+profile = Dir["#{home}/.mozilla/firefox/*.default"].first
+real = profile + '.real'
+empty = Dir["#{profile}/*"].empty?
+
+if empty
+  system %{ rsync -a #{real}/ #{profile} }
+else
+  system %{ rsync -a #{profile}/ #{real} }
+end

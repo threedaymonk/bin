@@ -1,0 +1,46 @@
+#!/usr/bin/env ruby
+
+# Unicode box-drawing
+# Commented out because OS X renders horizontal line poorly
+# TL    = "\xe2\x94\x8c"
+# TR    = "\xe2\x94\x90"
+# BL    = "\xe2\x94\x94"
+# BR    = "\xe2\x94\x98"
+# HORIZ = "\xe2\x94\x80"
+# VERT  = "\xe2\x94\x82"
+# JL    = "\xe2\x94\x9c"
+# JR    = "\xe2\x94\xa4"
+
+# ASCII
+TL    = '+'
+TR    = '+'
+BL    = '+'
+BR    = '+'
+HORIZ = '-'
+VERT  = '|'
+JL    = '+'
+JR    = '+'
+
+tables = Hash.new{ |h,k| h[k] = [] }
+
+prefix = ARGV.first ? ARGV.first + '.' : ''
+
+$stdin.read.scan(/CREATE TABLE `([^`]+)` \((.*?)\) ENGINE=/m) do |m|
+  table = tables[prefix+m[0]]
+  m[1].scan(/^\s*`([^`]+)` (\S+)/) do |n|
+    table << n
+  end
+end
+
+tables.sort_by{ |k,v| k }.each do |name, columns|
+  maxlen = ([name.length] + columns.map{ |a,b| a.length + b.length + 2 }).max
+  hr = HORIZ * (maxlen + 2)
+  puts TL+hr+TR
+  puts VERT + ' ' + name.ljust(maxlen) + ' ' + VERT
+  puts JL+hr+JR
+  columns = columns.sort_by{ |a,b| [a == 'id' ? 0 : 1, a] }.each do |col, typ|
+    puts VERT + ' ' + col + typ.rjust(maxlen - col.length) + ' ' + VERT
+  end
+  puts BL+hr+BR
+  puts
+end

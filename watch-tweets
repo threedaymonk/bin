@@ -13,6 +13,7 @@ at_messages           = '%s'
 host                  = 'twitter.com'
 path                  = '/statuses/friends_timeline.json'
 delay_between_updates = 120
+notification          = nil
 
 config_file = File.join(ENV['HOME'], '.watch-tweets.rc')
 eval(File.read(config_file), binding, config_file, 1)
@@ -56,6 +57,9 @@ Net::HTTP.start(host) do |http|
       messages.sort_by{ |m| m.message_id }.each do |m|
         if m.message_id > last_id
           puts m.format(message_format, at_messages)
+          if notification
+            notification.call(m)
+          end
           last_id = m.message_id
         end
       end

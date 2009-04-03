@@ -15,19 +15,17 @@ path                  = '/statuses/friends_timeline.json'
 delay_between_updates = 120
 notification          = nil
 
-config_file = File.join(ENV['HOME'], '.watch-tweets.rc')
-eval(File.read(config_file), binding, config_file, 1)
-
 class TwitterMessage
-  attr_accessor :text, :real_name, :screen_name, :created_at, :message_id
+  attr_accessor :text, :real_name, :screen_name, :created_at, :message_id, :profile_image_url
   def self.from_api(m)
     t = new
-    t.text        = CGI.unescapeHTML(m['text']) <<
-                    (m['truncated'] ? '[...]' : '')
-    t.real_name   = m['user']['name']
-    t.screen_name = m['user']['screen_name']
-    t.created_at  = Time.parse(m['created_at'])
-    t.message_id  = m['id'].to_i
+    t.text              = CGI.unescapeHTML(m['text']) <<
+                          (m['truncated'] ? '[...]' : '')
+    t.real_name         = m['user']['name']
+    t.screen_name       = m['user']['screen_name']
+    t.profile_image_url = m['user']['profile_image_url']
+    t.created_at        = Time.parse(m['created_at'])
+    t.message_id        = m['id'].to_i
     t
   end
 
@@ -42,6 +40,9 @@ class TwitterMessage
     }.gsub(/@[_a-z0-9]+/i){ at_pattern % $& }
   end
 end
+
+config_file = File.join(ENV['HOME'], '.watch-tweets.rc')
+eval(File.read(config_file), binding, config_file, 1)
 
 last_id  = 0
 succeeded_last_time = true

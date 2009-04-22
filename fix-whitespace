@@ -1,14 +1,16 @@
 #!/usr/bin/env ruby
 
-EXTENSIONS = %w[ rb erb html rhtml js sql ]
+EXTENSIONS = %w[ rb erb html rhtml js sql yml ]
 
 ARGV.each do |dir|
   Dir["#{dir}/**/*.{#{EXTENSIONS.join(',')}}"].each do |path|
     src = File.read(path)
     dest = src.split(/\n/).map{ |ln| ln.rstrip }.join("\n")
+    dest << "\n" unless dest =~ /\n\Z/
+
     next if src == dest
     File.open(path, 'w') do |f|
-      f.puts(dest)
+      f << dest
     end
     puts path
   end

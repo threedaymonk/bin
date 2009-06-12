@@ -1,4 +1,8 @@
 #!/usr/bin/env ruby
+options = []
+while ARGV.first =~ /^-/
+  options << ARGV.shift
+end
 feature = ARGV.first
 feature_dir = File.dirname(feature)
 # look up to two levels above the feature
@@ -6,4 +10,4 @@ ultimate_parent = (0 .. 2).
                   map{ |depth| feature_dir + ("/.." * depth) }.
                   select{ |dir| File.exist?(dir + "/support") }.
                   first
-system "cucumber", "-r", ultimate_parent, feature
+system *(["cucumber"] + options + ["-r", ultimate_parent, feature])

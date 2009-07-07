@@ -14,6 +14,7 @@ host                  = 'twitter.com'
 path                  = '/statuses/friends_timeline.json'
 delay_between_updates = 120
 notification          = nil
+ignore                = nil
 
 class TwitterMessage
   attr_accessor :text, :real_name, :screen_name, :created_at, :message_id, :profile_image_url
@@ -56,6 +57,7 @@ Net::HTTP.start(host) do |http|
       json = response.body
       messages = JSON.parse(json).map{ |m| TwitterMessage.from_api(m) }
       messages.sort_by{ |m| m.message_id }.each do |m|
+        next if ignore && m.text =~ ignore
         if m.message_id > last_id
           puts m.format(message_format, at_messages)
           if notification

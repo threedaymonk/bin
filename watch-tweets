@@ -20,8 +20,7 @@ class TwitterMessage
   attr_accessor :text, :real_name, :screen_name, :created_at, :message_id, :profile_image_url
   def self.from_api(m)
     t = new
-    t.text              = CGI.unescapeHTML(m['text']) <<
-                          (m['truncated'] ? '[...]' : '')
+    t.text              = (CGI.unescapeHTML(m['text']) << (m['truncated'] ? '[...]' : '')).strip.gsub(/\s+/, " ")
     t.real_name         = m['user']['name']
     t.screen_name       = m['user']['screen_name']
     t.profile_image_url = m['user']['profile_image_url']
@@ -32,7 +31,7 @@ class TwitterMessage
 
   def format(pattern, at_pattern)
     replacements = {'%t' => :text, '%N' => :real_name, '%n' => :screen_name}
-    pattern.gsub(/%[a-z]/i){ 
+    pattern.gsub(/%[a-z]/i){
       if r = replacements[$&]
         __send__(r)
       else

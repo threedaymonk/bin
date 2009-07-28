@@ -17,28 +17,27 @@ page = agent.submit(form, form.buttons.first)
 
 # Go to bandwidth page
 page = agent.get(page.search("//a").map{ |a| a['href'] }.find{ |h| h =~ /ADSLAccountDetails/ })
-font_elements = page.search("//font").map{ |a| a.inner_html }
-i = font_elements.index('Included Monthly Bandwidth Allowance')
-allowance = font_elements[i+1].to_i
 
-# Get bandwidth CSV for current month
-form = page.form('getbwu')
-form.monthFilter = Time.now.strftime('%Y-%m')
-csv = agent.submit(form, form.buttons.first).body
+# Find 15px tds
+tds = page.search("//td[@style='font-size: 15px']").map{ |a| a.inner_html }.select{ |h| h=~ /^<strong/ }
 
-headers = nil
-data = {}
-CSV::Reader.parse(csv) do |row|
-  if headers
-    headers.zip(row).each do |k, v|
-      data[k] = v
-    end
-  else
-    headers = row.to_a
+tds.each do |td|
+  m = td.match(%r{ <strong>([^<]+)</strong> \s* ([\d\.]+) \s* (\D+) }x)
+  key    = m[1]
+  number = m[2].to_f
+  units  = m[3]
+
+  case key
+  when /^included bandwidth allowance/i
+    key = "Allowance"
+  when /^pre-paid/i
+    key = "Pre-paid"
+  when /^peak usage/i
+    key = "Peak usage"
+  when /^off-peak usage/i
+    key = "Off-peak usage"
   end
+
+  # Uglier than necessary b/c left-padding is broken with %f
+  puts "%s %s GB" % [(key + ":").ljust(16), ("%2.2f" % number).rjust(5)]
 end
-prediction = data['Current Month Prediction'].to_f
-usage = data['Bandwidth Used'].to_f
-puts "Used:      %2.2f GB" % usage
-puts "Predicted: %2.2f GB" % prediction
-puts "Allowance: %2.2f GB" % allowance

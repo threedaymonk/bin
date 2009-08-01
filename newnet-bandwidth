@@ -27,6 +27,15 @@ tds.each do |td|
   number = m[2].to_f
   units  = m[3]
 
+  case units
+  when "MB"
+    number /= 2**10
+  when "KB"
+    number /= 2**20
+  when "bytes"
+    number /= 2**30
+  end
+
   case key
   when /^included bandwidth allowance/i
     key = "Allowance"

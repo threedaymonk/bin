@@ -8,6 +8,11 @@ class Gurl
   RETRIES = 3
   USER_AGENT = "GURL 0.2"
 
+  MIME = {
+    %r{\.jpe?g$}i => %r{^image/},
+    %r{\.(mpe?g|mov|wmv|avi)$}i => %r{^video/},
+  }
+
   def fetch(uri)
     ref = uri.split('/')[0,3].join('/') << '/'
     dir = uri.gsub(%r!^https?://[^/]+/|[^/]+$!, '')
@@ -27,13 +32,14 @@ class Gurl
           ) do |src|
             data = src.read
             begin
-              if (file =~ /\.jpe?g$/ && data[0,2] != "\xff\xd8")
-                raise 'not a JPEG file'
-              end
               File.open(file, "wb") do |dest|
                 dest.write(data)
-                puts (' OK.')
               end
+              unless mime_matches?(file)
+                FileUtils.rm(file)
+                raise 'unexpected file type'
+              end
+              puts (' OK.')
             rescue => e
               puts ' '+e.message+'.'
             end
@@ -90,6 +96,21 @@ class Gurl
       fetch(loc)
     end
   end
+
+  def mime_matches?(path)
+    MIME.each do |name_match, mime_match|
+      if path =~ name_match
+        mime = `file -ib "#{path}"`
+        if mime =~ mime_match
+          return true
+        else
+          return false
+        end
+      end
+    end
+    return true
+  end
+
 end
 
 begin

@@ -6,7 +6,7 @@ ARGV.each do |dir|
   Dir["#{dir}/**/*.{#{EXTENSIONS.join(',')}}"].each do |path|
     src = File.read(path)
     dest = src.split(/\n/).map{ |ln| ln.rstrip }.join("\n")
-    dest << "\n" unless dest =~ /\n\Z/
+    dest << "\n" if src =~ /\n\Z/ && dest !~ /\n\Z/
 
     next if src == dest
     File.open(path, 'w') do |f|

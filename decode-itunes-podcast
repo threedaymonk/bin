@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+
+require 'net/http'
+require 'uri'
+require 'cgi'
+
+def http(verb, address)
+  uri = URI.parse(address)
+  Net::HTTP.start(uri.host, uri.port) do |http|
+    return http.__send__(verb, uri.path + "?" + uri.query)
+  end
+end
+
+ARGV.each do |arg|
+  location      = http(:head, arg)["location"]
+  redirect_html = http(:get, location).body
+  itms_url      = CGI.unescapeHTML(redirect_html[/itmsOpen\('([^']*)/, 1])
+  itunes_feed   = http(:get, itms_url.sub(/^itms/, "http")).body
+  feed_url      = CGI.unescapeHTML(itunes_feed[%r!<key>feedURL</key>\s*<string>([^<]*)</string>!, 1])
+  puts feed_url
+end

@@ -1,0 +1,72 @@
+#!/usr/bin/env ruby
+require "csv"
+require "forwardable"
+require "optparse"
+
+class CSView
+  extend Forwardable
+
+  ANSI_NORMAL    = "\e[0m"
+  ANSI_ALTERNATE = "\e[33m"
+
+  def_delegators :@output, :print, :puts
+  attr_reader :options
+
+  def initialize(output, options={})
+    @output     = output
+    @alternator = 0
+    @options    = options
+  end
+
+  def view(path)
+    headers = nil
+    header_width = nil
+    CSV.open(path, "r") do |row|
+      if headers
+        headers.zip(row).each do |key, value|
+          next if value.empty? && options[:hide_empty]
+          alternate
+          print((key + ":").ljust(header_width + 2))
+          if value =~ /\n/
+            puts "", value.gsub(/(^|\n)/, "\\1  ")
+          else
+            puts value
+          end
+        end
+        puts
+      else
+        headers = row
+        header_width = headers.map{ |h| h.length }.max
+      end
+    end
+  end
+
+  def alternate
+    print @alternator.zero? ? ANSI_NORMAL : ANSI_ALTERNATE
+    @alternator = (@alternator + 1) % 2
+  end
+end
+
+options = {}
+optparser = OptionParser.new{ |opts|
+  opts.banner = "Usage: #{File.basename($0)} [options] file.csv"
+  opts.on( "-e", "--hide-empty", "Suppress output of empty cells" ){
+    options[:hide_empty] = true
+  }
+  opts.on( "-h", "--help", "Display this screen" ){
+    puts opts
+    exit
+  }
+}
+optparser.parse!
+
+if ARGV.empty?
+  puts optparser
+  exit
+end
+
+begin
+  viewer = CSView.new(open("|less -r", "w"), options)
+  viewer.view(ARGV.first)
+rescue Errno::EPIPE, Interrupt
+end

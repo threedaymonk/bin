@@ -24,6 +24,7 @@ class CSView
     CSV.open(path, "r") do |row|
       if headers
         headers.zip(row).each do |key, value|
+          value ||= ""
           next if value.empty? && options[:hide_empty]
           alternate
           print((key + ":").ljust(header_width + 2))

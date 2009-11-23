@@ -76,5 +76,6 @@ begin
   end
   viewer = CSView.new(out, options)
   viewer.view(ARGV.first)
+  out.close
 rescue Errno::EPIPE, Interrupt
 end

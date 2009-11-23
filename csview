@@ -42,6 +42,7 @@ class CSView
   end
 
   def alternate
+    return unless options[:color]
     print @alternator.zero? ? ANSI_NORMAL : ANSI_ALTERNATE
     @alternator = (@alternator + 1) % 2
   end
@@ -66,7 +67,13 @@ if ARGV.empty?
 end
 
 begin
-  viewer = CSView.new(open("|less -r", "w"), options)
+  if $stdout.tty?
+    out = open("|less -r", "w")
+    options[:color] = true
+  else
+    out = $stdout
+  end
+  viewer = CSView.new(out, options)
   viewer.view(ARGV.first)
 rescue Errno::EPIPE, Interrupt
 end

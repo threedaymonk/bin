@@ -1,0 +1,70 @@
+#!/usr/bin/env ruby
+require "open-uri"
+require "fileutils"
+include FileUtils
+
+BUILD_ROOT = 'http://build.chromium.org/buildbot/snapshots'
+
+module Anything
+  def self.===(other) true; end
+end
+
+def sh(*args)
+  ok = system *args
+  raise "Error running #{ args.inspect }" unless ok
+end
+
+os =
+  case `uname -o`
+  when /linux/i
+    :linux
+  when /darwin/i
+    :mac
+  else
+    raise "Unknown OS"
+  end
+
+arch =
+  case `uname -m`
+  when /x86_64/
+    :x86_64
+  when /i\d86/
+    :x86
+  end
+
+path_fragment =
+  case [os, arch]
+  when [:linux, :x86_64]
+    "linux-64"
+  when [:linux, :x86]
+    "linux"
+  when [:mac, Anything]
+    "mac"
+  else
+    raise "Unknown platform"
+  end
+
+archive = "chrome-#{ os }.zip"
+
+platform_root = "#{ BUILD_ROOT }/chromium-rel-#{ path_fragment }"
+latest_version =
+  open("#{ platform_root }/LATEST"){ |f| f.read }.
+  scan(/\d+/)
+
+Dir.chdir("/tmp")
+sh %{curl -O "#{ platform_root }/#{ latest_version }/#{ archive }"}
+sh %{unzip "#{ archive }"}
+
+location, directory =
+  case os
+  when :linux
+    ["/opt", "chrome-linux"]
+  when :mac
+    ["/Applications", "Chromium.app"]
+  end
+
+mv "#{ location }/#{ directory }", "#{ location }/#{ directory }.old"
+mv directory, "#{ location }/#{ directory }"
+Dir.chdir location do
+  rm_rf "#{ directory }.old"
+end

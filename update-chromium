@@ -63,6 +63,7 @@ location, directory =
     ["/Applications", "Chromium.app"]
   end
 
+sh %{chmod -R a+rX "#{ directory }"}
 mv "#{ location }/#{ directory }", "#{ location }/#{ directory }.old"
 mv directory, "#{ location }/#{ directory }"
 Dir.chdir location do

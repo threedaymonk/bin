@@ -2,17 +2,15 @@
 
 params = {}
 key = nil
-ARGV.each do |a|
-  if a =~ /^-/
-    key = a
-    params[key] = nil
-  else
-    params[key] = a
-  end
+while ARGV.first =~ /^-/
+  params[ARGV.shift] = ARGV.shift
 end
+
 title = params.delete('-t') || params.delete('--song') || 'Part'
+offset = (params.delete('--start') || 1).to_i
 common = params.inject(''){ |s, (k,v)| s << ' ' << [k,v].compact.map{ |a| %{"#{a}"} }.join(' ') }
 
-Dir['*.mp3'].sort.each_with_index do |file, i|
-  system %{id3v2 #{common} --track "#{i+1}" --song "#{title} #{i+1}" "#{file}"}
+ARGV.sort.each_with_index do |file, i|
+  track = i + offset
+  system %{id3v2 #{common} --track "#{track}" --song "#{title} #{track}" "#{file}"}
 end

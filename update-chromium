@@ -47,12 +47,13 @@ path_fragment =
 archive = "chrome-#{ os }.zip"
 
 platform_root = "#{ BUILD_ROOT }/chromium-rel-#{ path_fragment }"
-latest_version =
+version =
+  ARGV.first ||
   open("#{ platform_root }/LATEST"){ |f| f.read }.
   scan(/\d+/)
 
 Dir.chdir("/tmp")
-sh %{curl -O "#{ platform_root }/#{ latest_version }/#{ archive }"}
+sh %{curl -O "#{ platform_root }/#{ version }/#{ archive }"}
 sh %{unzip "#{ archive }"}
 
 location, directory =

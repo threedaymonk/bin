@@ -1,0 +1,19 @@
+#!/bin/sh
+
+case "$1"
+in
+  "" | "-h" | "--help")
+    echo "usage: git mktag tag-name [commit-ish]"
+    echo "commit-ish defaults to HEAD."
+    exit
+    ;;
+esac
+
+if [ "$2" = "" ]
+then
+  REV="HEAD"
+else
+  REV=`git rev-parse "$2"`
+fi
+
+git tag -a -m "$1" "$1" "$REV"

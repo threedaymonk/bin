@@ -15,7 +15,7 @@ def sh(*args)
 end
 
 os =
-  case `uname -o`
+  case `uname -s`
   when /linux/i
     :linux
   when /darwin/i
@@ -34,11 +34,11 @@ arch =
 
 path_fragment =
   case [os, arch]
-  when [:linux, :x86_64]
+  when :linux, :x86_64
     "linux-64"
-  when [:linux, :x86]
+  when :linux, :x86
     "linux"
-  when [:mac, Anything]
+  when :mac, Anything
     "mac"
   else
     raise "Unknown platform"
@@ -56,17 +56,16 @@ Dir.chdir("/tmp")
 sh %{curl -O "#{ platform_root }/#{ version }/#{ archive }"}
 sh %{unzip "#{ archive }"}
 
-location, directory =
+target, directory =
   case os
   when :linux
-    ["/opt", "chrome-linux"]
+    ["/opt/chrome-linux", "chrome-linux"]
   when :mac
-    ["/Applications", "Chromium.app"]
+    ["/Applications/Chromium.app", "chrome-mac/Chromium.app"]
   end
 
 sh %{chmod -R a+rX "#{ directory }"}
-mv "#{ location }/#{ directory }", "#{ location }/#{ directory }.old"
-mv directory, "#{ location }/#{ directory }"
-Dir.chdir location do
-  rm_rf "#{ directory }.old"
-end
+old_target = target + ".old"
+mv target, old_target
+mv directory, target
+rm_rf old_target

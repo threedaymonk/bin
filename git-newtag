@@ -3,7 +3,7 @@
 case "$1"
 in
   "" | "-h" | "--help")
-    echo "usage: git mktag tag-name [commit-ish]"
+    echo "usage: git newtag tag-name [commit-ish]"
     echo "commit-ish defaults to HEAD."
     exit
     ;;

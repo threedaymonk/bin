@@ -5,10 +5,6 @@ include FileUtils
 
 BUILD_ROOT = 'http://build.chromium.org/buildbot/snapshots'
 
-module Anything
-  def self.===(other) true; end
-end
-
 def sh(*args)
   ok = system *args
   raise "Error running #{ args.inspect }" unless ok
@@ -33,12 +29,17 @@ arch =
   end
 
 path_fragment =
-  case [os, arch]
-  when :linux, :x86_64
-    "linux-64"
-  when :linux, :x86
-    "linux"
-  when :mac, Anything
+  case os
+  when :linux
+    case arch
+    when :x86_64
+      "linux-64"
+    when :x86
+      "linux"
+    else
+      raise "Unknown architecture"
+    end
+  when :mac
     "mac"
   else
     raise "Unknown platform"

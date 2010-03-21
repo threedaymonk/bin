@@ -2,6 +2,7 @@
 require "optparse"
 require "find"
 require "fileutils"
+require "escape"
 
 options = {
   :ignore  => [],
@@ -23,7 +24,7 @@ optparser = OptionParser.new{ |opts|
 optparser.parse!
 
 def hash(path)
-  `sha256sum -b "#{path}"`[/^\S+/]
+  `#{Escape.shell_command(["sha256sum", "-b", path])}`[/^\S+/]
 end
 
 def hash_to_path(hash)

@@ -82,5 +82,8 @@ Dir.chdir(source) do
         verbose "Error reading #{path}"
       end
     end
+    if File.exist?(dest_path)
+      File.utime File.atime(path), File.mtime(path), dest_path
+    end
   end
 end

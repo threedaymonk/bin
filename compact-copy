@@ -61,7 +61,7 @@ Dir.chdir(source) do
     elsif File.symlink?(path)
       origin = File.readlink(path)
       verbose "Symlink #{origin} -> #{path}"
-      FileUtils.ln_s origin, dest_path
+      FileUtils.ln_sf origin, dest_path
     elsif File.directory?(path)
       FileUtils.mkdir_p dest_path
     else

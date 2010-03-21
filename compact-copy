@@ -67,11 +67,12 @@ Dir.chdir(source) do
     else
       h = hash(path)
       if h
+        short_h = h[/^.{8}/]
         canonical = File.join(dest, hash_to_path(h))
         if File.exist?(canonical)
-          verbose "Link #{h} -> #{path}"
+          verbose "Link #{short_h} -> #{path}"
         else
-          verbose "Copy & link #{h} -> #{path}"
+          verbose "Copy & link #{short_h} -> #{path}"
           FileUtils.mkdir_p File.dirname(canonical)
           FileUtils.cp path, canonical
         end

@@ -10,7 +10,7 @@ class Gurl
 
   MIME = {
     %r{\.jpe?g$}i => %r{^image/},
-    %r{\.(mpe?g|mov|wmv|avi)$}i => %r{^video/},
+    %r{\.(mpe?g|mov|wmv|avi)$}i => %r{^video/|^application/},
   }
 
   def fetch(uri)

@@ -1,0 +1,66 @@
+#!/usr/bin/env ruby
+require "stringio"
+$stderr = StringIO.new # Silence Nokogiri's whining
+require "mechanize"
+$stderr = STDERR
+
+STATUS_COLORS = {
+  "Good service"  => "green",
+  "Minor delays"  => "yellow",
+  "Severe delays" => "red",
+}
+STATUS_COLORS.default = "red"
+
+class Line
+  attr_reader :name, :short_name, :color
+  def initialize(color, name, short_name=nil)
+    @color      = color
+    @name       = name
+    @short_name = short_name || name
+  end
+
+  attr_writer :status
+  def status_color
+    STATUS_COLORS[status]
+  end
+
+  def status
+    @status.gsub(/[^a-z ]+/i, "")
+  end
+
+  def ok?
+    status == "Good service"
+  end
+end
+
+lines = {
+  "bakerloo"           => Line.new("#AE6118", "Bakerloo"),
+  "central"            => Line.new("#E41F1F", "Central"),
+  "circle"             => Line.new("#F8D42D", "Circle"),
+  "district"           => Line.new("#00A575", "District"),
+  "hammersmithandcity" => Line.new("#E899A8", "Hammersmith & City", "H & C"),
+  "jubilee"            => Line.new("#8F989E", "Jubilee"),
+  "metropolitan"       => Line.new("#893267", "Met.", "Metropolitan"),
+  "northern"           => Line.new("#000000", "Northern"),
+  "piccadilly"         => Line.new("#0450A1", "Piccadilly"),
+  "victoria"           => Line.new("#009FE0", "Victoria"),
+  "waterlooandcity"    => Line.new("#70C3CE", "Waterloo & City", "W & C"),
+}
+
+agent = WWW::Mechanize.new
+page   = agent.get('http://www.tfl.gov.uk/tfl/livetravelnews/realtime/tube/default.html')
+keys   = page.search('#lines dt').map{ |dt| dt["class"] }
+values = page.search('#lines dd').map{ |dd|
+  (dd.search('h3').first || dd).text
+}
+Hash[*keys.zip(values).flatten].each do |line_key, status|
+  line = lines[line_key]
+  next unless line
+  line.status = status
+end
+
+name_width = lines.values.map{ |l| l.short_name.length }.max
+lines.values.sort_by{ |l| l.name.upcase }.each do |line|
+  next if line.ok?
+  puts "${color grey}#{line.short_name.ljust(name_width)} ${color #{line.status_color}}#{line.status}$color"
+end

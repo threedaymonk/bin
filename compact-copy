@@ -5,7 +5,7 @@ require "fileutils"
 require "escape"
 
 options = {
-  :ignore  => [],
+  :ignore  => ["/.by_hash/"],
   :verbose => 0
 }
 optparser = OptionParser.new{ |opts|
@@ -44,12 +44,7 @@ end
 source, dest, = ARGV
 dest = File.expand_path(dest)
 FileUtils.mkdir_p dest
-ignore =
-  if options[:ignore].any?
-    Regexp.new(options[:ignore].map{ |s| Regexp.new(s) }.join("|"))
-  else
-    nil
-  end
+ignore = Regexp.new(options[:ignore].map{ |s| Regexp.new(s) }.join("|"))
 
 Dir.chdir(source) do
   Find.find(".") do |path|

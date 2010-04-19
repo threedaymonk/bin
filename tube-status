@@ -49,18 +49,16 @@ lines = {
 
 agent = WWW::Mechanize.new
 page   = agent.get('http://www.tfl.gov.uk/tfl/livetravelnews/realtime/tube/default.html')
-keys   = page.search('#lines dt').map{ |dt| dt["class"] }
-values = page.search('#lines dd').map{ |dd|
-  (dd.search('h3').first || dd).text
-}
-Hash[*keys.zip(values).flatten].each do |line_key, status|
+page.search("#lines li").each do |li|
+  line_key = li.search("h3").first["class"].split(/ /).first
+  status = li.search("div").first.text
   line = lines[line_key]
   next unless line
   line.status = status
 end
 
-name_width = lines.values.map{ |l| l.short_name.length }.max
-lines.values.sort_by{ |l| l.name.upcase }.each do |line|
-  next if line.ok?
+lines_with_problems = lines.values.reject{ |l| l.ok? }
+name_width = lines_with_problems.map{ |l| l.short_name.length }.max
+lines_with_problems.sort_by{ |l| l.name.upcase }.each do |line|
   puts "${color grey}#{line.short_name.ljust(name_width)} ${color #{line.status_color}}#{line.status}$color"
 end

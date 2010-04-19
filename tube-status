@@ -52,7 +52,7 @@ agent = WWW::Mechanize.new
 page   = agent.get('http://www.tfl.gov.uk/tfl/livetravelnews/realtime/tube/default.html')
 page.search("#lines li").each do |li|
   line_key = li.search("h3").first["class"].split(/ /).first
-  status = li.search("div").first.text
+  status = (li.search("h4").first || li.search("div").first).text
   line = lines[line_key]
   next unless line
   line.status = status

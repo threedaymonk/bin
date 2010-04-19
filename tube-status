@@ -17,6 +17,7 @@ class Line
     @color      = color
     @name       = name
     @short_name = short_name || name
+    @status     = "ERROR"
   end
 
   attr_writer :status
@@ -61,4 +62,8 @@ lines_with_problems = lines.values.reject{ |l| l.ok? }
 name_width = lines_with_problems.map{ |l| l.short_name.length }.max
 lines_with_problems.sort_by{ |l| l.name.upcase }.each do |line|
   puts "${color grey}#{line.short_name.ljust(name_width)} ${color #{line.status_color}}#{line.status}$color"
+end
+
+if lines_with_problems.empty?
+  puts "${color grey}All ${color green}Good service$color"
 end

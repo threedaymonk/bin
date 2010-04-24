@@ -51,17 +51,17 @@ class Line
 end
 
 lines = {
-  "bakerloo"           => Line.new("#AE6118", "Bakerloo"),
-  "central"            => Line.new("#E41F1F", "Central"),
-  "circle"             => Line.new("#F8D42D", "Circle"),
-  "district"           => Line.new("#00A575", "District"),
-  "hammersmithandcity" => Line.new("#E899A8", "Hammersmith & City", "H & C"),
-  "jubilee"            => Line.new("#8F989E", "Jubilee"),
-  "metropolitan"       => Line.new("#893267", "Met.", "Metropolitan"),
-  "northern"           => Line.new("#000000", "Northern"),
-  "piccadilly"         => Line.new("#0450A1", "Piccadilly"),
-  "victoria"           => Line.new("#009FE0", "Victoria"),
-  "waterlooandcity"    => Line.new("#70C3CE", "Waterloo & City", "W & C"),
+  "bakerloo"           => Line.new("#AE6118", "Bakerloo", "Bak."),
+  "central"            => Line.new("#E41F1F", "Central", "Cen."),
+  "circle"             => Line.new("#F8D42D", "Circle", "Cir."),
+  "district"           => Line.new("#00A575", "District", "Dis."),
+  "hammersmithandcity" => Line.new("#E899A8", "Hammersmith & City", "H&C"),
+  "jubilee"            => Line.new("#8F989E", "Jubilee", "Jub."),
+  "metropolitan"       => Line.new("#893267", "Metropolitan", "Met."),
+  "northern"           => Line.new("#000000", "Northern", "Nor."),
+  "piccadilly"         => Line.new("#0450A1", "Piccadilly", "Pic."),
+  "victoria"           => Line.new("#009FE0", "Victoria", "Vic."),
+  "waterlooandcity"    => Line.new("#70C3CE", "Waterloo & City", "W&C"),
 }
 
 agent = WWW::Mechanize.new

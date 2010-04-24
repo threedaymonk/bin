@@ -4,33 +4,49 @@ $stderr = StringIO.new # Silence Nokogiri's whining
 require "mechanize"
 $stderr = STDERR
 
-STATUS_COLORS = {
-  "Good service"  => "green",
-  "Minor delays"  => "yellow",
-  "Severe delays" => "red",
-}
-STATUS_COLORS.default = "red"
-
 class Line
-  attr_reader :name, :short_name, :color
+  class Status
+    STATUS_COLORS = {
+      "Good service"    => "green",
+      "Minor delays"    => "yellow",
+      "Severe delays"   => "orange",
+      "Part closure"    => "red",
+      "Part suspended"  => "red",
+      "Planned closure" => "red",
+    }
+    STATUS_COLORS.default = "red"
+
+    def initialize(text)
+      @text = text
+    end
+
+    def color
+      STATUS_COLORS[@text]
+    end
+
+    def ok?
+      @text == "Good service"
+    end
+
+    def description
+      @text.gsub(/[^a-z, ]+/i, "")
+    end
+  end
+
+  attr_reader :name, :short_name, :color, :statuses
   def initialize(color, name, short_name=nil)
     @color      = color
     @name       = name
     @short_name = short_name || name
-    @status     = "ERROR"
+    @statuses   = [Status.new("ERROR")]
   end
 
-  attr_writer :status
-  def status_color
-    STATUS_COLORS[status]
-  end
-
-  def status
-    @status.gsub(/[^a-z ]+/i, "")
+  def status=(s)
+    @statuses = s.split(/\s*,\s*/).map{ |t| Status.new(t) }
   end
 
   def ok?
-    status == "Good service"
+    statuses.all?{ |s| s.ok? }
   end
 end
 
@@ -61,7 +77,14 @@ end
 lines_with_problems = lines.values.reject{ |l| l.ok? }
 name_width = lines_with_problems.map{ |l| l.short_name.length }.max
 lines_with_problems.sort_by{ |l| l.name.upcase }.each do |line|
-  puts "${color grey}#{line.short_name.ljust(name_width)} ${color #{line.status_color}}#{line.status}$color"
+  line.statuses.each_with_index do |status, i|
+    if i == 0
+      print "${color #{line.color}}◆ ${color grey}#{line.short_name.ljust(name_width)}"
+    else
+      print "  ", " " * name_width
+    end
+    puts " ${color #{status.color}}#{status.description}$color"
+  end
 end
 
 if lines_with_problems.empty?

@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+ARGV.each do |svg|
+  pdf = svg.sub(/[^\.]+$/, "pdf")
+  system %{inkscape --export-area-drawing --export-pdf="#{pdf}" "#{svg}"}
+end

@@ -1,9 +1,11 @@
 #!/usr/bin/env ruby
 require "stringio"
-$stderr = StringIO.new
+$stderr = StringIO.new # Prevent Nokogiri libxml version noise
 require 'mechanize'
 $stderr = STDERR
 require 'csv'
+require 'json'
+
 UNIT_MULTIPLIERS = {
   "TB" => 2**40,
   "GB" => 2**30,
@@ -11,50 +13,38 @@ UNIT_MULTIPLIERS = {
   "KB" => 2**10
 }
 
-email, password = nil
-config_file = File.join(ENV['HOME'], '.newnet')
-eval(File.read(config_file), binding, config_file, 1)
+config = JSON.parse(File.read(File.join(ENV['HOME'], ".config", "newnet")))
 
-agent = WWW::Mechanize.new
+agent = Mechanize.new
 
 # Sign in
 page = agent.get('https://orderform.co.uk/login/index.php?form=orac')
 form = page.form('login')
-form.emailaddress = email
-form.password     = password
+form.emailaddress = config["email"]
+form.password     = config["password"]
 page = agent.submit(form, form.buttons.first)
 
 # Go to bandwidth page
-page = agent.get(page.search("//a").map{ |a| a['href'] }.find{ |h| h =~ /ADSLAccountDetails/ })
+account_link = page.search("//a").map{ |a| a['href'] }.find{ |h| h =~ /ADSLAccountDetails/ }
+page = agent.get(account_link)
 
-# Find 15px tds
-tds = page.search("//td[@style='font-size: 15px']").map{ |a| a.inner_html }.select{ |h| h=~ /^<strong/ }
+body = page.body.
+            gsub(%r{<script.*?</script>|<style.*?</style>}im, " ").
+            gsub(/(?:<[^>]+>|\s)+/, " ")
 
-data = tds.inject({}){ |acc, td|
-  m = td.match(%r{ <strong>([^<]+)</strong> \s* ([\d\.]+) \s* (\D+) }x)
-  key    = m[1]
-  value  = m[2].to_f
-  units  = m[3].upcase.gsub(/[^A-Z]+/, "")
+data = {
+  :included => %r{Included bandwidth allowance: (\S+)},
+  :prepaid  => %r{Additional pre paid bandwidth allowance: (\S+)},
+  :peak     => %r{Peak usage in \w+: (\S+)},
+  :offpeak  => %r{Off Peak \(free\) usage in \w+: (\S+)}
+}.inject({}){ |h, (name, pattern)|
+  field  = body.match(pattern)[1]
+  units  = field.upcase.gsub(/[^A-Z]+/, "")
+  value  = field.to_f * (UNIT_MULTIPLIERS[units] || 1)
 
-  value *= (UNIT_MULTIPLIERS[units] || 1)
-
-  key =
-    case key
-    when /^included bandwidth allowance/i
-      :included
-    when /^pre-paid/i
-      :prepaid
-    when /^peak usage/i
-      :peak
-    when /^off-peak usage/i
-      :offpeak
-    else
-      key
-    end
-
-  acc[key] = value
-  acc
+  h.merge(name => value)
 }
+
 data[:allowance] = data[:included] + data[:prepaid]
 
 if ARGV.include?("--usage")

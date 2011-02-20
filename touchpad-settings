@@ -1,0 +1,6 @@
+#!/bin/bash
+function sp {
+  xinput --set-prop "SynPS/2 Synaptics TouchPad" "$@"
+}
+sp "Synaptics Tap Time" 0
+sp "Synaptics Edge Scrolling" 0 0 0

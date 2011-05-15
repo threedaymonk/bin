@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Detect when the named device is plugged in and remap buttons accordingly
+# Usage: remap-buttons "Foo" "1 2 3 4 5 6 7 8"
+
+device=$1
+map=$2
+last_state=-1
+
+while [ 1 ]
+do
+  xinput list | grep "$device" > /dev/null
+  if [ $? -eq 0 ]; then
+    state=1
+  else
+    state=0
+  fi
+  if [ $state -ne $last_state ]; then
+    last_state=$state
+    if [ $state -eq 1 ]; then
+      xinput set-button-map "$device" $map
+    fi
+  fi
+  sleep 10
+done

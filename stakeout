@@ -17,6 +17,13 @@ ARGV.each do |arg|
   end
 end
 
+colors = {
+  :red    => "\e[1;31m",
+  :green  => "\e[1;32m",
+  :yellow => "\e[1;33m",
+  :reset  => "\e[0m"
+}
+
 loop do
   sleep 1
 
@@ -26,8 +33,11 @@ loop do
 
   if changed_file
     files[changed_file] = File.mtime(changed_file)
-    puts "=> #{changed_file} changed, running #{command}"
+    puts colors[:yellow] + "=> #{changed_file} changed, running #{command}" + colors[:reset]
+
     system(command)
-    puts "=> done"
+
+    print colors[$? == 0 ? :green : :red]
+    puts "=> done" + colors[:reset]
   end
 end

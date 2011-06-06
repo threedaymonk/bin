@@ -4,7 +4,7 @@
 # http://www.pragmaticautomation.com/cgi-bin/pragauto.cgi/Monitor/StakingOutFileChanges.rdoc
 
 if ARGV.size < 2
-  puts "Usage: stakeout.rb <command> [files to watch]+"
+  puts "Usage: stakeout <command> [files to watch]+"
   exit 1
 end
 
@@ -28,7 +28,11 @@ loop do
   sleep 1
 
   changed_file, last_changed = files.find { |file, last_changed|
-    File.mtime(file) > last_changed
+    begin
+      File.mtime(file) > last_changed
+    rescue Errno::ENOENT # Gracefully handle race condition
+      false
+    end
   }
 
   if changed_file

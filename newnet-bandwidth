@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
 require "stringio"
-$stderr = StringIO.new # Prevent Nokogiri libxml version noise
 require 'mechanize'
-$stderr = STDERR
 require 'csv'
 require 'json'
 

@@ -4,18 +4,28 @@
 # http://www.pragmaticautomation.com/cgi-bin/pragauto.cgi/Monitor/StakingOutFileChanges.rdoc
 
 if ARGV.size < 2
-  puts "Usage: stakeout <command> [files to watch]+"
+  puts "Usage: stakeout <command> <glob>"
   exit 1
 end
 
-command = ARGV.shift
-files = {}
-
-ARGV.each do |arg|
-  Dir[arg].each do |file|
-    files[file] = File.mtime(file)
-  end
+def expand_files(globs)
+  {}.tap { |files|
+    globs.each do |glob|
+      Dir[glob].each do |file|
+        files[file] =
+          begin
+            File.mtime(file)
+          rescue Errno::ENOENT # Gracefully handle race condition
+            0
+          end
+      end
+    end
+  }
 end
+
+command = ARGV.shift
+
+files_a = expand_files(ARGV)
 
 colors = {
   :red    => "\e[1;31m",
@@ -27,17 +37,29 @@ colors = {
 loop do
   sleep 1
 
-  changed_file, last_changed = files.find { |file, last_changed|
-    begin
-      File.mtime(file) > last_changed
-    rescue Errno::ENOENT # Gracefully handle race condition
-      false
-    end
+  files_b = expand_files(ARGV)
+
+  removed = files_a.keys - files_b.keys
+  added   = files_b.keys - files_a.keys
+  changed = (files_a.keys & files_b.keys).select { |f|
+    files_a[f] != files_b[f]
   }
 
-  if changed_file
-    files[changed_file] = File.mtime(changed_file)
-    puts colors[:yellow] + "=> #{changed_file} changed, running #{command}" + colors[:reset]
+  files_a = files_b
+
+  if (removed + added + changed).any?
+    puts colors[:yellow]
+    added.each do |f|
+      puts "=> #{f} added"
+    end
+    removed.each do |f|
+      puts "=> #{f} removed"
+    end
+    changed.each do |f|
+      puts "=> #{f} changed"
+    end
+    puts command
+    puts colors[:reset]
 
     system(command)
 

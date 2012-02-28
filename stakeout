@@ -3,8 +3,8 @@
 # Adapted from
 # http://www.pragmaticautomation.com/cgi-bin/pragauto.cgi/Monitor/StakingOutFileChanges.rdoc
 
-if ARGV.size < 2
-  puts "Usage: stakeout <command> <glob>"
+if ARGV.size < 3 || !ARGV.include?("-")
+  puts "Usage: stakeout <command> - <glob(s)>"
   exit 1
 end
 
@@ -23,9 +23,9 @@ def expand_files(globs)
   }
 end
 
-command = ARGV.shift
-
-files_a = expand_files(ARGV)
+split = ARGV.index("-")
+command = ARGV[0, split].join(" ")
+files_a = expand_files(ARGV[(split + 1) .. - 1])
 
 colors = {
   :red    => "\e[1;31m",

@@ -25,7 +25,8 @@ end
 
 split = ARGV.index("-")
 command = ARGV[0, split].join(" ")
-files_a = expand_files(ARGV[(split + 1) .. - 1])
+globs = ARGV[(split + 1) .. -1]
+files_a = expand_files(globs)
 
 colors = {
   :red    => "\e[1;31m",
@@ -37,7 +38,7 @@ colors = {
 loop do
   sleep 1
 
-  files_b = expand_files(ARGV)
+  files_b = expand_files(globs)
 
   removed = files_a.keys - files_b.keys
   added   = files_b.keys - files_a.keys

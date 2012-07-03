@@ -4,7 +4,7 @@ class Processors
   BASE = "/sys/devices/system/cpu"
 
   def speeds
-    @speeds ||= read("scaling_available_frequencies").split.map(&:to_i).sort
+    read("scaling_available_frequencies").split.map(&:to_i).sort
   end
 
   def speed
@@ -12,16 +12,16 @@ class Processors
   end
 
   def governors
-    @governors ||= read("scaling_available_governors").split
+    read("scaling_available_governors").split
   end
 
   def governor
-    read("scaling_governor").chomp
+    read("scaling_governor")
   end
 
   def governor=(g)
     cpus.each do |cpu|
-      write(cpu, "scaling_governor", g)
+      write cpu, "scaling_governor", g
     end
   end
 
@@ -54,8 +54,8 @@ class Thermal
   end
 end
 
-TOO_HOT = 90
-COOL_ENOUGH = 85
+TOO_HOT = 95
+COOL_ENOUGH = 90
 
 processors = Processors.new
 thermal = Thermal.new

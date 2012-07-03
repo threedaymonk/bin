@@ -1,0 +1,90 @@
+#!/usr/bin/env ruby
+
+class Processors
+  BASE = "/sys/devices/system/cpu"
+
+  def speeds
+    @speeds ||= read("scaling_available_frequencies").split.map(&:to_i).sort
+  end
+
+  def speed
+    read("scaling_cur_freq").to_i
+  end
+
+  def governors
+    @governors ||= read("scaling_available_governors").split
+  end
+
+  def governor
+    read("scaling_governor").chomp
+  end
+
+  def governor=(g)
+    cpus.each do |cpu|
+      write(cpu, "scaling_governor", g)
+    end
+  end
+
+  def slow_down
+    self.governor = "powersave"
+  end
+
+  def speed_up
+    self.governor = "ondemand"
+  end
+
+  def cpus
+    @cpus ||= Dir.chdir(BASE) { Dir["cpu[0-9]*"].sort }
+  end
+
+  def read(f)
+    File.read(File.join(BASE, cpus.first, "cpufreq", f)).chomp
+  end
+
+  def write(cpu, f, value)
+    File.open File.join(BASE, cpu, "cpufreq", f), "w" do |io|
+      io.puts value
+    end
+  end
+end
+
+class Thermal
+  def cpu
+    File.read("/proc/acpi/ibm/thermal")[/\d+/].to_i
+  end
+end
+
+TOO_HOT = 90
+COOL_ENOUGH = 85
+
+processors = Processors.new
+thermal = Thermal.new
+state = nil
+
+puts "CPUS: #{processors.cpus.join(" ")}"
+puts "Speeds: #{processors.speeds.join(" ")}"
+puts "Governors: #{processors.governors.join(" ")}"
+puts
+
+loop do
+  t = thermal.cpu
+
+  puts "Time: #{Time.now}"
+  puts "Speed: #{processors.speed}"
+  puts "Governor: #{processors.governor}"
+  puts "Temperature: #{t}"
+
+  if t >= TOO_HOT && state != :slow
+    puts "Too hot: switching to slow mode"
+    processors.slow_down
+    state = :slow
+  elsif t <= COOL_ENOUGH && state != :fast
+    puts "Cool enough: switching to fast mode"
+    processors.speed_up
+    state = :fast
+  end
+
+  puts
+
+  sleep 5
+end

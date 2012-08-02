@@ -1,0 +1,7 @@
+#!/bin/bash
+repo=$1
+if [[ $repo =~ "/" ]]; then
+  git clone git://bitbucket.org/$repo
+else
+  git clone git@bitbucket.org:threedaymonk/$repo
+fi

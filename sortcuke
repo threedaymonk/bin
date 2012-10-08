@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+
+source = ARGF.read
+preamble = source.split(/^(?:Given|Then|When)/, 2).first
+
+steps = source.scan(/^(?:Given|Then|When).*?^end/m).map { |defn|
+  title = defn[/^.+/].
+    sub(/^Given/, "A").
+    sub(/^When/,  "B").
+    sub(/^Then/,  "C")
+
+  if title =~ /\bnot\b/
+    title = title.gsub(/\bnot /, "") + " not"
+  end
+  [title, defn]
+}
+
+puts preamble unless preamble.strip.empty?
+puts steps.sort.map(&:last).join("\n\n")

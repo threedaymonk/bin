@@ -6,7 +6,13 @@ displays = Hash[`xrandr`.scan(/^([A-Z]+\d+) (dis)?connected/).map { |parts|
 
 internal = displays.keys.select { |k| k =~ /^LVDS/ }
 external = displays.keys - internal
-connected = (external.select { |k| displays[k] } + internal)[0,1]
+
+if ARGV.first == "internal"
+  connected = internal.take(1)
+else
+  connected = (external.select { |k| displays[k] } + internal).take(1)
+end
+
 disconnected = displays.keys - connected
 
 commands = [

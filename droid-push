@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+
+require "shellwords"
+
+files = ARGV
+destination = File.join("sdcard", files.pop)
+
+def execute(*parts)
+  system parts.join(" ") or raise "Transfer failed"
+end
+
+files.each do |f|
+  $stderr.print "#{f} ..."
+  $stderr.flush
+  begin
+    dir = File.dirname(File.join(destination, f))
+    execute "adb", "shell",
+      Shellwords.escape("mkdir -p #{Shellwords.escape(dir)}")
+    execute "adb", "push",
+      Shellwords.escape(f),
+      Shellwords.escape(File.join(destination, f))
+    $stderr.puts " OK"
+  rescue => e
+    $stderr.puts " Failed"
+  end
+end

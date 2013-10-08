@@ -1,0 +1,57 @@
+#!/bin/bash
+
+resolution="300"
+width="210"
+height="297"
+output_dir="$HOME/Pictures/Scans"
+filename=""
+
+usage() {
+cat << EOF
+usage: $0 options
+
+OPTIONS:
+    -f      Filename
+    -r      Resolution in DPI ($resolution)
+    -x      Width in mm ($width)
+    -y      Height in mm ($height)
+    -h      Show this message
+EOF
+}
+
+while getopts “r:x:y:f:h” OPTION; do
+     case $OPTION in
+         h)
+             usage
+             exit
+             ;;
+         r)
+             resolution=$OPTARG
+             ;;
+         x)
+             width=$OPTARG
+             ;;
+         y)
+             height=$OPTARG
+             ;;
+         f)
+             filename=$OPTARG
+             ;;
+         ?)
+             usage
+             exit
+             ;;
+     esac
+done
+
+if [ "$filename" = "" ]; then
+  output_file="$output_dir/$(date -u +'%FT%T%z.jpg')"
+else
+  output_file="$output_dir/$filename"
+fi
+
+echo "Scanning to $output_file ..."
+
+mkdir -p $output_dir
+scanimage --resolution $resolution -x $width -y $height |\
+  convert - "$output_file"

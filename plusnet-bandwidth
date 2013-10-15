@@ -32,7 +32,8 @@ page = agent.get(START_URL)
 form = page.forms.find { |f| f.action == START_URL }
 form.username = config.fetch("username")
 form.password = config.fetch("password")
-page = agent.submit(form, form.buttons.first)
+agent.submit(form, form.buttons.first)
+page = agent.get(START_URL)
 
 peak, off_peak, allowance = [
   ".vmbuMonthTotal .usageAllowance",

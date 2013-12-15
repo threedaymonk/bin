@@ -1,26 +1,56 @@
 #!/usr/bin/env ruby
 
 require "shellwords"
+require "open3"
 
-files = ARGV
-destination = File.join("sdcard", files.pop)
-
-def execute(*parts)
-  system parts.join(" ") or raise "Transfer failed"
+def escape(s)
+  Shellwords.escape(s)
 end
 
-files.each do |f|
-  $stderr.print "#{f} ..."
+def ok(s)
+  "\e[32;1m#{s}\e[0m"
+end
+
+def failed(s)
+  "\e[31;1m#{s}\e[0m"
+end
+
+def execute(*parts)
+  cmd = parts.join(" ")
+  $stderr.print "#{cmd} "
   $stderr.flush
-  begin
-    dir = File.dirname(File.join(destination, f))
-    execute "adb", "shell",
-      Shellwords.escape("mkdir -p #{Shellwords.escape(dir)}")
-    execute "adb", "push",
-      Shellwords.escape(f),
-      Shellwords.escape(File.join(destination, f))
-    $stderr.puts " OK"
-  rescue => e
-    $stderr.puts " Failed"
+
+  stdout_str, stderr_str, status = Open3.capture3(cmd)
+
+  if status.success?
+    puts ok("OK")
+  else
+    puts failed("Failed")
+    raise RuntimeError, "Execution failed: #{stderr_str}"
   end
+end
+
+def push(f, g)
+  execute "adb", "push", escape(f), escape(g)
+end
+
+def mkdir_p(*dirs)
+  execute "adb", "shell",
+    escape("mkdir -p #{dirs.map { |d| escape(d) }.join(" ")}")
+end
+
+files = ARGV.map { |f|
+  if File.directory?(f)
+    Dir[File.join(f, "**", "*")]
+  else
+    f
+  end
+}.flatten.reject { |f| File.directory?(f) }
+
+destination = File.join("sdcard", files.pop)
+
+mkdir_p *files.map { |f| File.dirname(File.join(destination, f)) }.uniq
+
+files.sort.each do |f|
+  push f, File.join(destination, f)
 end

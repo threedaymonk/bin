@@ -54,4 +54,4 @@ echo "Scanning to $output_file ..."
 
 mkdir -p $output_dir
 scanimage --resolution $resolution -x $width -y $height |\
-  convert - "$output_file"
+  convert - -density $resolution "$output_file"

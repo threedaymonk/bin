@@ -1,8 +1,8 @@
 #!/bin/bash
 
-resolution="300"
-width="210"
-height="297"
+resolution=300
+width=210
+height=297
 output_dir="$HOME/Pictures/Scans"
 filename=""
 
@@ -15,33 +15,50 @@ OPTIONS:
     -r      Resolution in DPI ($resolution)
     -x      Width in mm ($width)
     -y      Height in mm ($height)
+    -p      Preset page size: a4p a5p a5l
     -h      Show this message
 EOF
 }
 
-while getopts “r:x:y:f:h” OPTION; do
-     case $OPTION in
-         h)
-             usage
-             exit
-             ;;
-         r)
-             resolution=$OPTARG
-             ;;
-         x)
-             width=$OPTARG
-             ;;
-         y)
-             height=$OPTARG
-             ;;
-         f)
-             filename=$OPTARG
-             ;;
-         ?)
-             usage
-             exit
-             ;;
-     esac
+while getopts “r:x:y:p:f:h” OPTION; do
+  case $OPTION in
+    h)
+      usage
+      exit
+      ;;
+    r)
+      resolution=$OPTARG
+      ;;
+    p)
+      case $OPTARG in
+        a4p)
+          width=210
+          height=297
+          ;;
+        a5l)
+          width=210
+          height=149
+          ;;
+        a5p)
+          width=149
+          height=210
+          ;;
+      esac
+      ;;
+    x)
+      width=$OPTARG
+      ;;
+    y)
+      height=$OPTARG
+      ;;
+    f)
+      filename=$OPTARG
+      ;;
+    ?)
+      usage
+      exit
+      ;;
+  esac
 done
 
 if [ "$filename" = "" ]; then

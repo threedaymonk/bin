@@ -37,10 +37,10 @@ while getopts “r:x:y:p:f:h” OPTION; do
           ;;
         a5l)
           width=210
-          height=149
+          height=148
           ;;
         a5p)
-          width=149
+          width=148
           height=210
           ;;
       esac

@@ -5,6 +5,7 @@ width=210
 height=297
 output_dir="$HOME/Pictures/Scans"
 filename=""
+mode=Color
 
 usage() {
 cat << EOF
@@ -12,6 +13,9 @@ usage: $0 options
 
 OPTIONS:
     -f      Filename
+    -c      Colour
+    -g      Greyscale
+    -m      Mono
     -r      Resolution in DPI ($resolution)
     -x      Width in mm ($width)
     -y      Height in mm ($height)
@@ -20,7 +24,7 @@ OPTIONS:
 EOF
 }
 
-while getopts “r:x:y:p:f:h” OPTION; do
+while getopts “r:x:y:p:f:hcgm” OPTION; do
   case $OPTION in
     h)
       usage
@@ -54,6 +58,15 @@ while getopts “r:x:y:p:f:h” OPTION; do
     f)
       filename=$OPTARG
       ;;
+    c)
+      mode=Color
+      ;;
+    g)
+      mode=Gray
+      ;;
+    m)
+      mode=Lineart
+      ;;
     ?)
       usage
       exit
@@ -70,5 +83,5 @@ fi
 echo "Scanning to $output_file ..."
 
 mkdir -p $output_dir
-scanimage --resolution $resolution -x $width -y $height |\
+scanimage --resolution $resolution --mode $mode -x $width -y $height |\
   convert - -density $resolution "$output_file"

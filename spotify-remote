@@ -1,1 +1,55 @@
-/home/paul/src/spotify-dbus-remote/spotify-remote
+#!/usr/bin/env bash
+
+# spotify remote control using dbus
+# http://www.mabishu.com/blog/2010/11/15/playing-with-d-bus-interface-of-spotify-for-linux/
+
+DESTINATION="org.mpris.MediaPlayer2.spotify"
+COMMAND="/org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player."
+
+# usage
+function usage() {
+    echo "usage: $(basename $0) [command]";
+}
+
+# count arguments
+if [[ $# -gt 2 || $# -lt 1 ]];
+then
+    echo >&2 "illegal number of arguments"; 
+	usage;
+	exit 1;
+fi
+
+# input command
+case "$1" in
+	play)
+        COMMAND+="Play";
+	;;
+	pause)
+        COMMAND+="Pause";
+	;;
+	playpause)
+        COMMAND+="PlayPause";
+	;;
+	stop)
+        COMMAND+="Stop";
+	;;
+	next)
+        COMMAND+="Next";
+	;;
+	previous | prev)
+        COMMAND+="Previous";
+	;;
+    open)
+        COMMAND+="OpenUri string:$2";
+    ;;
+	*)
+        usage;
+	;;
+esac
+
+# send to dbus
+CMD="dbus-send --print-reply --reply-timeout=5000 --type=method_call --dest=${DESTINATION} ${COMMAND}";
+echo $CMD;
+eval $CMD;
+
+exit 0;

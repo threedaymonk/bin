@@ -1,0 +1,3 @@
+#!/bin/sh
+
+oathtool --totp --base32 $(pass "$@" | grep ^2fa: | cut -d' ' -f2) | xsel -bi

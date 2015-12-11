@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+git checkout HEAD -- Gemfile.lock
+bundle
+git add Gemfile.lock

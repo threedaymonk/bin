@@ -33,7 +33,6 @@ ESCAPE_SEQUENCES = {
   green: '1;32m',
   yellow: '1;33m',
   reset: '0m',
-  clear_screen: '2J'
 }
 
 def escape_sequence(*names)
@@ -56,7 +55,7 @@ loop do
   files_a = files_b
 
   if (removed + added + changed).any?
-    escape_sequence :clear_screen, :yellow
+    escape_sequence :yellow
     added.each do |f|
       puts "=> #{f} added"
     end

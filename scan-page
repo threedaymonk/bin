@@ -7,6 +7,7 @@ quality=75
 output_dir="$HOME/Pictures/Scans"
 filename=""
 mode=Color
+format=jpg
 
 usage() {
 cat << EOF
@@ -71,6 +72,7 @@ while getopts “r:q:x:y:p:f:hcgm” OPTION; do
       ;;
     m)
       mode=Lineart
+      format=png
       ;;
     ?)
       usage
@@ -80,13 +82,15 @@ while getopts “r:q:x:y:p:f:hcgm” OPTION; do
 done
 
 if [ "$filename" = "" ]; then
-  output_file="$output_dir/$(date -u +'%FT%T%z.jpg')"
-else
-  output_file="$output_dir/$filename"
+  filename="$(date -u +'%FT%T%z').$format"
 fi
+
+temp_file="$output_dir/.tmp.$filename"
+output_file="$output_dir/$filename"
 
 echo "Scanning to $output_file ..."
 
 mkdir -p $output_dir
 scanimage --resolution $resolution --mode $mode -x $width -y $height |\
-  convert - -density $resolution -quality $quality "$output_file"
+  convert - -density $resolution -quality $quality "$temp_file"
+mv "$temp_file" "$output_file"

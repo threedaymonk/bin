@@ -3,6 +3,7 @@
 resolution=300
 width=210
 height=297
+quality=75
 output_dir="$HOME/Pictures/Scans"
 filename=""
 mode=Color
@@ -17,6 +18,7 @@ OPTIONS:
     -g      Greyscale
     -m      Mono
     -r      Resolution in DPI (default: $resolution)
+    -q      Image quality (default: $quality)
     -x      Width in mm (default: $width)
     -y      Height in mm (default: $height)
     -p      Preset page size: a4p a5p a5l
@@ -24,7 +26,7 @@ OPTIONS:
 EOF
 }
 
-while getopts “r:x:y:p:f:hcgm” OPTION; do
+while getopts “r:q:x:y:p:f:hcgm” OPTION; do
   case $OPTION in
     h)
       usage
@@ -32,6 +34,9 @@ while getopts “r:x:y:p:f:hcgm” OPTION; do
       ;;
     r)
       resolution=$OPTARG
+      ;;
+    q)
+      quality=$OPTARG
       ;;
     p)
       case $OPTARG in
@@ -84,4 +89,4 @@ echo "Scanning to $output_file ..."
 
 mkdir -p $output_dir
 scanimage --resolution $resolution --mode $mode -x $width -y $height |\
-  convert - -density $resolution "$output_file"
+  convert - -density $resolution -quality $quality "$output_file"

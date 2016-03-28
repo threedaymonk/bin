@@ -12,13 +12,13 @@ cat << EOF
 usage: $0 options
 
 OPTIONS:
-    -f      Filename
-    -c      Colour
+    -f      Filename (default: current date and time)
+    -c      Colour (default)
     -g      Greyscale
     -m      Mono
-    -r      Resolution in DPI ($resolution)
-    -x      Width in mm ($width)
-    -y      Height in mm ($height)
+    -r      Resolution in DPI (default: $resolution)
+    -x      Width in mm (default: $width)
+    -y      Height in mm (default: $height)
     -p      Preset page size: a4p a5p a5l
     -h      Show this message
 EOF

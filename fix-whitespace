@@ -5,7 +5,7 @@ EXTENSIONS = %w[ rb haml erb html rhtml js sql yml feature md ]
 ARGV.each do |dir|
   Dir["#{dir}/**/*.{#{EXTENSIONS.join(',')}}"].each do |path|
     src = File.read(path)
-    dest = src.gsub(/\t/, "  ").split(/\n/).map{ |ln| ln.rstrip }.join("\n")
+    dest = src.gsub(/\t/, "  ").gsub(/ +$/, '').gsub(/\n\n+/, "\n\n")
     dest << "\n" if src =~ /\n\Z/ && dest !~ /\n\Z/
 
     next if src == dest

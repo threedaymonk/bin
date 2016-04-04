@@ -3,7 +3,7 @@
 # spotify remote control using dbus
 # http://www.mabishu.com/blog/2010/11/15/playing-with-d-bus-interface-of-spotify-for-linux/
 
-DESTINATION="org.mpris.MediaPlayer2.spotify"
+DESTINATION="org.mpris.MediaPlayer2.Player"
 COMMAND="/org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player."
 
 # usage

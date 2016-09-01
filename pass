@@ -1,0 +1,18 @@
+#!/bin/bash
+
+REAL_PASS="/usr/bin/pass"
+
+case "$1" in
+2fa)
+  TOTP_SEED=$($REAL_PASS "$2" | grep "^2fa:" | cut -d" " -f2)
+  if [ -z "$TOTP_SEED" ]; then
+    echo "Could not find a 2FA seed for $2." >&2
+    exit 1
+  fi
+  oathtool --totp --base32 "$TOTP_SEED" | xsel -bi
+  echo "Copied 2FA code for $2 to clipboard." >&2
+  ;;
+*)
+  $REAL_PASS "$@"
+  ;;
+esac

@@ -22,7 +22,7 @@ OPTIONS:
     -q      Image quality (default: $quality)
     -x      Width in mm (default: $width)
     -y      Height in mm (default: $height)
-    -p      Preset page size: a4p a5p a5l 6x4l 6x4p
+    -p      Preset page size: us a4p a5p a5l 6x4l 6x4p
     -h      Show this message
 EOF
 }
@@ -41,6 +41,10 @@ while getopts “r:q:x:y:p:f:hcgm” OPTION; do
       ;;
     p)
       case $OPTARG in
+        us)
+          width=216
+          height=279
+          ;;
         a4p)
           width=210
           height=297

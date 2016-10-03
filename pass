@@ -9,7 +9,7 @@ case "$1" in
     echo "Could not find a 2FA seed for $2." >&2
     exit 1
   fi
-  oathtool --totp --base32 "$TOTP_SEED" | xsel -bi
+  oathtool --totp --base32 "$TOTP_SEED" | tee >(xsel -bi)
   echo "Copied 2FA code for $2 to clipboard." >&2
   ;;
 *)

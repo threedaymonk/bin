@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+require 'csv'
+require 'date'
+
+output = CSV.new($stdout)
+
+CSV.parse(ARGF.read.strip, headers: true).each do |row|
+  case row['Date']
+  when 'Today'
+    date = Date.today
+  when 'Yesterday'
+    date = Date.today - 1
+  else
+    date = Date.parse(row['Date'])
+  end
+
+  timestamp = date.strftime('%d/%m/%Y')
+  description = row['Description']
+  amount = row['Amount'].gsub(/,/, '')
+
+  output << [timestamp, amount, description]
+end

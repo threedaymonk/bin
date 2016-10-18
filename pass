@@ -12,6 +12,11 @@ case "$1" in
   oathtool --totp --base32 "$TOTP_SEED" | tee >(xsel -bi)
   echo "Copied 2FA code for $2 to clipboard." >&2
   ;;
+sync)
+  $REAL_PASS git fetch
+  $REAL_PASS git rebase origin/master
+  $REAL_PASS git push
+  ;;
 *)
   $REAL_PASS "$@"
   ;;

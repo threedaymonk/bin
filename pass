@@ -15,7 +15,7 @@ case "$1" in
   TOTP=$(oathtool --totp --base32 "$TOTP_SEED")
   echo "$TOTP"
   if [ ! -z ${DISPLAY:-} ]; then
-    echo "$TOTP" | xsel -bi
+    echo "$TOTP" | xclip -selection clipboard
     echo "Copied 2FA code for $2 to clipboard." >&2
   fi
   ;;

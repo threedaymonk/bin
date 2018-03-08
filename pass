@@ -24,6 +24,9 @@ sync)
   $REAL_PASS git rebase origin/master
   $REAL_PASS git push
   ;;
+nth)
+  $REAL_PASS "$2" | head -n1 | cut -c "$3"
+  ;;
 *)
   $REAL_PASS "$@"
   ;;

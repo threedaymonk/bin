@@ -12,10 +12,10 @@ case "$1" in
     echo "Could not find a 2FA seed for $2." >&2
     exit 1
   fi
-  TOTP=$(oathtool --totp --base32 "$TOTP_SEED")
+  TOTP=$(oathtool --totp --base32 "$TOTP_SEED" | tr -d '\n')
   echo "$TOTP"
   if [ ! -z ${DISPLAY:-} ]; then
-    echo "$TOTP" | xclip -selection clipboard
+    echo -n "$TOTP" | xclip -selection clipboard
     echo "Copied 2FA code for $2 to clipboard." >&2
   fi
   ;;

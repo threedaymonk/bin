@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+PP="json_pp -f json -t json"
+DIFF="diff -y -W $(tput cols)"
+
+$DIFF <($PP <"$1") <($PP <"$2")

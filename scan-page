@@ -103,6 +103,7 @@ output_file="$output_dir/$filename"
 echo "Scanning to $output_file ..."
 
 mkdir -p $output_dir
+scanimage --list-devices >/dev/null
 scanimage --resolution $resolution --mode $mode -x $width -y $height |\
   convert - -density $resolution -quality $quality "$temp_file"
 mv "$temp_file" "$output_file"

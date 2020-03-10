@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-EXTENSIONS = %w[ rb haml erb html rhtml js sql yml feature md ]
+EXTENSIONS = %w[ c h rb haml erb html rhtml js sql yml feature md css scss ]
 
 ARGV.each do |dir|
   Dir["#{dir}/**/*.{#{EXTENSIONS.join(',')}}"].each do |path|

@@ -1,5 +1,5 @@
 #!/bin/bash
 file="${1:-$(ls | grep ^README | head -n 1)}"
 if [ "$file" != "" ]; then
-  pandoc -t html "$file" | w3m -o confirm_qq=0 -T text/html
+  pandoc -f gfm -t html "$file" | w3m -o confirm_qq=0 -T text/html
 fi

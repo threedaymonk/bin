@@ -1,0 +1,14 @@
+#!/usr/bin/env python
+import urllib.request
+import json
+
+url = 'https://rms.api.bbc.co.uk/v2/services/bbc_6music/segments/latest?limit=10'
+
+with urllib.request.urlopen(url) as response:
+    data = json.loads(response.read())
+
+    for song in data['data']:
+        artist = song['titles']['primary']
+        track = song['titles']['secondary']
+        indicator = '*' if song['offset']['now_playing'] else ' '
+        print('{0} {1} - {2}'.format(indicator, track, artist))
